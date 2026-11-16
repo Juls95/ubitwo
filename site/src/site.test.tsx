@@ -1,7 +1,9 @@
 /** @jest-environment jsdom */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { App, BannerDemo, Pagina } from "./App";
+import embed from "vega-embed";
+import { App, BannerDemo, leerRuta, Pagina } from "./App";
 import { crearDemo } from "../../src/noticias/demo";
+import { Chart } from "./components/Chart";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { BarraAcuerdo, InsigniaPostura } from "./components/Comunes";
 import { TarjetaActivo } from "./components/TarjetaActivo";
@@ -11,7 +13,7 @@ import { parsearTesis, reiniciarCacheTesis, type Tesis } from "./lib/tesis";
 import { safeHref } from "./lib/safe-url";
 import { filtrarActivos } from "./pages/PaginaNoticias";
 import { pasosDeConexion } from "./pages/PaginaEstado";
-import { tokenEnLaUrl } from "./pages/PaginaAcceso";
+import { errorDeEnlace, tokenEnLaUrl } from "./pages/PaginaAcceso";
 
 jest.mock("vega-embed", () => ({ __esModule: true, default: jest.fn().mockResolvedValue({ finalize: jest.fn() }) }));
 
@@ -138,6 +140,26 @@ describe("thesis and utilities", () => {
     expect(tokenEnLaUrl()).toBe("abc");
     window.history.replaceState(null, "", "/login#access_token=xyz&type=magiclink");
     expect(tokenEnLaUrl()).toBe("xyz");
+    window.history.replaceState(null, "", "/login#/news");
+    expect(tokenEnLaUrl()).toBeNull();
+  });
+
+  it("treats hashless /login and an expired link as sign-in", () => {
+    window.history.replaceState(null, "", "/login");
+    expect(leerRuta()).toBe("/login");
+    expect(tokenEnLaUrl()).toBeNull();
+    expect(errorDeEnlace()).toBeNull();
+    window.history.replaceState(null, "", "/acceso");
+    expect(leerRuta()).toBe("/login");
+    window.history.replaceState(null, "", "/login#error=access_denied&error_code=otp_expired");
+    expect(leerRuta()).toBe("/login");
+    expect(errorDeEnlace()).toMatch(/expired/);
+    window.history.replaceState(null, "", "/login#/news");
+    expect(leerRuta()).toBe("/news");
+    window.history.replaceState(null, "", "/#/login");
+    expect(leerRuta()).toBe("/login");
+    window.history.replaceState(null, "", "/");
+    expect(leerRuta()).toBe("/");
   });
 });
 
@@ -242,6 +264,40 @@ describe("pages", () => {
   it("login: explains when email is not configured yet", () => {
     render(<Pagina ruta="/login" {...props} sesion={{ politica: "abierto-local", usuario: null, acceso_configurado: false }} />);
     expect(screen.getByText(/not configured on this server yet/)).toBeInTheDocument();
+  });
+
+  it("login: /login without a token shows sign-in, not the agora", async () => {
+    window.history.replaceState(null, "", "/login");
+    render(<App />);
+    expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: /agora/ })).not.toBeInTheDocument();
+  });
+
+  it("login: an expired magic link explains the failure", () => {
+    window.history.replaceState(null, "", "/login#error=access_denied&error_code=otp_expired");
+    render(<Pagina ruta="/login" {...props} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(/invalid or has expired/);
+  });
+
+  it("chart: finalizes a vega view that resolves after unmount", async () => {
+    const finalize = jest.fn();
+    let resolveEmbed: (value: { finalize: () => void }) => void = () => undefined;
+    const embedMock = embed as unknown as jest.Mock;
+    embedMock.mockImplementation(
+      () =>
+        new Promise<{ finalize: () => void }>((resolve) => {
+          resolveEmbed = resolve;
+        }),
+    );
+    const chart = tesis.charts[0];
+    if (!chart) throw new Error("missing chart");
+    const { unmount } = render(<Chart chart={chart} />);
+    await waitFor(() => expect(embedMock).toHaveBeenCalled());
+    unmount();
+    resolveEmbed({ finalize });
+    await waitFor(() => expect(finalize).toHaveBeenCalledTimes(1));
+    embedMock.mockResolvedValue({ finalize: jest.fn() });
   });
 
   it("login: redeems the link token and clears it from the URL", async () => {

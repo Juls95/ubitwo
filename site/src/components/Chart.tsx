@@ -20,8 +20,13 @@ export function Chart({ chart }: { chart: ChartView }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const host = ref.current;
+    if (!host) return;
+    // Own node: a late embed paints here, and cleanup detaches it before the next chart mounts.
+    const mount = document.createElement("div");
+    host.appendChild(mount);
     let cancelled = false;
-    let finalize: (() => void) | undefined;
+    let view: { finalize: () => void } | undefined;
     const spec = {
       ...chart.spec,
       background: "transparent",
@@ -29,20 +34,28 @@ export function Chart({ chart }: { chart: ChartView }) {
     };
     import("vega-embed")
       .then(({ default: embed }) => {
-        if (cancelled || !ref.current) return undefined;
-        return embed(ref.current, spec as never, {
+        if (cancelled) return undefined;
+        return embed(mount, spec as never, {
           actions: { export: true, source: false, compiled: false, editor: false },
           renderer: "svg",
           ast: true,
         });
       })
       .then((result) => {
-        finalize = result?.finalize;
+        if (!result) return;
+        if (cancelled) {
+          result.finalize();
+          return;
+        }
+        view = result;
       })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      });
     return () => {
       cancelled = true;
-      finalize?.();
+      view?.finalize();
+      mount.remove();
     };
   }, [chart.spec]);
 

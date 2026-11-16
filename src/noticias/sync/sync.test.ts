@@ -1,6 +1,6 @@
 import { repositorioMemoria } from "../repositorio";
 import { crearClienteNotion, textoBloque, textoPropiedad, type ClienteNotion, type Pagina } from "./notion";
-import { construirFiltro, metaDePagina, sincronizar } from "./sincronizar";
+import { construirFiltro, esDelUsuario, metaDePagina, sincronizar } from "./sincronizar";
 import { leerDias } from "./run";
 
 const rt = (s: string) => [{ plain_text: s }];
@@ -48,15 +48,14 @@ describe("propiedades y bloques de Notion", () => {
 });
 
 describe("construirFiltro", () => {
-  it("filtra por última edición y, si se pide, por dueño", () => {
+  it("filtra por última edición y deja el dueño para después (email o people)", () => {
     const hoy = new Date("2026-11-16T00:00:00Z");
     expect(construirFiltro({ dias: 7, hoy })).toEqual({ timestamp: "last_edited_time", last_edited_time: { on_or_after: "2026-11-09" } });
-    expect(construirFiltro({ dias: 7, hoy, propUsuario: "Usuario", filtroUsuario: "ana@example.org" })).toEqual({
-      and: [
-        { timestamp: "last_edited_time", last_edited_time: { on_or_after: "2026-11-09" } },
-        { property: "Usuario", email: { equals: "ana@example.org" } },
-      ],
-    });
+    expect(esDelUsuario("ana@example.org", "Ana@Example.org")).toBe(true);
+    expect(esDelUsuario("ana@example.org, otro@example.org", "otro@example.org")).toBe(true);
+    expect(esDelUsuario("otro@example.org", "ana@example.org")).toBe(false);
+    expect(esDelUsuario(null, "ana@example.org")).toBe(false);
+    expect(esDelUsuario(null, undefined)).toBe(true);
   });
 });
 
@@ -80,6 +79,24 @@ describe("sincronizar", () => {
 
     const r2 = await sincronizar({ notion, repo, databaseId: "db", dias: 30 });
     expect(r2).toMatchObject({ guardadas: 0, sin_cambios: 2 });
+  });
+
+  it("omite borradores en inglés y dueños que no coinciden (people o email)", async () => {
+    const paginas = [
+      pagina("pending", props("2026-11-15", { Estado: { type: "status", status: { name: "Pending" } } })),
+      pagina("not-started", props("2026-11-14", { Estado: { type: "status", status: { name: "Not started" } } })),
+      pagina("mia", props("2026-11-13", { Usuario: { type: "people", people: [{ person: { email: "Ana@Example.org" } }] } })),
+      pagina("otra", props("2026-11-12", { Usuario: { type: "people", people: [{ person: { email: "otro@example.org" } }] } })),
+      pagina("mail", props("2026-11-11", { Usuario: { type: "email", email: "otro@example.org" } })),
+    ];
+    const notion = notionFalso(paginas, { mia: cuerpoValido("2026-11-13", "SOL") });
+    const repo = repositorioMemoria([], "local");
+    const r = await sincronizar({ notion, repo, databaseId: "db", propUsuario: "Usuario", filtroUsuario: "ana@example.org", dias: 30 });
+    expect(notion.filtros[0]).toEqual({ timestamp: "last_edited_time", last_edited_time: { on_or_after: expect.any(String) } });
+    expect(notion.filtros[0]).not.toHaveProperty("and");
+    expect(r).toMatchObject({ leidas: 5, guardadas: 1, omitidas: 4, errores: [] });
+    expect((await repo.obtener("2026-11-13"))?.resumen.activos[0]?.ticker).toBe("SOL");
+    expect(await repo.obtener("2026-11-12")).toBeNull();
   });
 
   it("si dos páginas tienen la misma fecha gana la editada más recientemente", async () => {

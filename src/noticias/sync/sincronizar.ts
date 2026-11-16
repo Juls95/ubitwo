@@ -1,6 +1,6 @@
 import { addDays, isoDay } from "../../lib/dates";
 import { createLogger } from "../../lib/logger";
-import { ErrorResumen, extraerJson, normalizar } from "../normalizar";
+import { ErrorResumen, extraerJson, normalizar, normalizarEstado } from "../normalizar";
 import { hashContenido, type RepositorioNoticias } from "../repositorio";
 import { propiedadPorTipo, textoPropiedad, type ClienteNotion, type Pagina } from "./notion";
 
@@ -26,12 +26,22 @@ export type ResultadoSync = {
   errores: { pagina: string; error: string }[];
 };
 
-/** Filtro de Notion: páginas editadas en los últimos N días y, opcionalmente, de un solo dueño. */
-export function construirFiltro(o: Pick<OpcionesSync, "propUsuario" | "filtroUsuario" | "dias" | "hoy">): Record<string, unknown> {
+/**
+ * Filtro de Notion: páginas editadas en los últimos N días.
+ * El dueño no va aquí. `email.equals` solo vale en una propiedad Email; en People la consulta
+ * falla entera. El correo (email o people) se compara al leer cada página.
+ */
+export function construirFiltro(o: Pick<OpcionesSync, "dias" | "hoy">): Record<string, unknown> {
   const desde = addDays(isoDay(o.hoy ?? new Date()), -o.dias);
-  const condiciones: Record<string, unknown>[] = [{ timestamp: "last_edited_time", last_edited_time: { on_or_after: desde } }];
-  if (o.propUsuario && o.filtroUsuario) condiciones.push({ property: o.propUsuario, email: { equals: o.filtroUsuario } });
-  return condiciones.length === 1 ? (condiciones[0] as Record<string, unknown>) : { and: condiciones };
+  return { timestamp: "last_edited_time", last_edited_time: { on_or_after: desde } };
+}
+
+/** El dueño puede ser un email o varios (people), separados por coma. Sin filtro, entra cualquiera. */
+export function esDelUsuario(propietario: string | null, filtro?: string): boolean {
+  const objetivo = filtro?.trim().toLowerCase() ?? "";
+  if (!objetivo) return true;
+  if (!propietario) return false;
+  return propietario.split(",").some((correo) => correo.trim() === objetivo);
 }
 
 export function metaDePagina(pagina: Pagina, propUsuario?: string) {
@@ -57,7 +67,10 @@ export async function sincronizar(o: OpcionesSync): Promise<ResultadoSync> {
   const fechasVistas = new Set<string>();
   for (const pagina of paginas) {
     const meta = metaDePagina(pagina, o.propUsuario);
-    if (meta.estado && meta.estado.toLowerCase() === "pendiente") {
+    // Los alias de borrador viven en normalizarEstado (pendiente, pending, not started).
+    const borrador = normalizarEstado(meta.estado) === "pendiente";
+    const deOtro = Boolean(o.propUsuario && o.filtroUsuario && !esDelUsuario(meta.propietario, o.filtroUsuario));
+    if (borrador || deOtro) {
       r.omitidas++;
       continue;
     }

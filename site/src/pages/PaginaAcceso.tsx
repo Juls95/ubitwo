@@ -1,12 +1,28 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, ErrorApi, type Sesion } from "../lib/api";
 
+/** Pathname where Supabase returns the magic link. The fragment may be a token, not a hash route. */
+export function retornoMagico(): boolean {
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  return path === "/login" || path === "/acceso";
+}
+
 /** Supabase token in the /acceso or /login fragment (implicit magic-link flow), or null. */
 export function tokenEnLaUrl(): string | null {
-  const path = window.location.pathname;
-  if (path !== "/acceso" && path !== "/login") return null;
-  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return params.get("access_token");
+  if (!retornoMagico()) return null;
+  const hash = window.location.hash.replace(/^#/, "");
+  if (hash.startsWith("/")) return null;
+  return new URLSearchParams(hash).get("access_token");
+}
+
+/** Expired or rejected magic links come back as an error fragment, with no token. */
+export function errorDeEnlace(): string | null {
+  if (!retornoMagico()) return null;
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash || hash.startsWith("/")) return null;
+  const params = new URLSearchParams(hash);
+  if (!params.get("error") && !params.get("error_code")) return null;
+  return "The link is invalid or has expired. Request a new one.";
 }
 
 function irA(hash: string) {
@@ -20,7 +36,7 @@ type Props = { sesion: Sesion | null; alCambiarSesion: () => void };
 export function PaginaAcceso({ sesion, alCambiarSesion }: Props) {
   const [email, setEmail] = useState("");
   const [mensaje, setMensaje] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => errorDeEnlace());
   const [enviando, setEnviando] = useState(false);
   const [verificando, setVerificando] = useState(() => tokenEnLaUrl() !== null);
   const verificado = useRef(false);

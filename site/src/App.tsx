@@ -9,7 +9,7 @@ import { PaginaPreguntar } from "./pages/PaginaPreguntar";
 import { PaginaTesis } from "./pages/PaginaTesis";
 import { PaginaMetodologia } from "./pages/PaginaMetodologia";
 import { PaginaEstado } from "./pages/PaginaEstado";
-import { PaginaAcceso, tokenEnLaUrl } from "./pages/PaginaAcceso";
+import { PaginaAcceso, retornoMagico } from "./pages/PaginaAcceso";
 
 export const NAV = [
   { href: "#/", label: "Home" },
@@ -21,8 +21,13 @@ export const NAV = [
   { href: "#/status", label: "Status" },
 ];
 
-// Supabase returns the magic link to /acceso or /login#access_token=…; that fragment is not a hash route and is handled in PaginaAcceso.
-const leerRuta = () => (tokenEnLaUrl() ? "/login" : window.location.hash.replace(/^#/, "") || "/");
+// Supabase returns the magic link to /login or /acceso. A token fragment is not a hash route.
+// Hashless /login, and an expired link (`#error=…`), still open sign-in; a real hash route (`#/news`) wins.
+export const leerRuta = () => {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (hash.startsWith("/")) return hash;
+  return retornoMagico() ? "/login" : hash || "/";
+};
 
 export function useRuta(): string {
   const [ruta, setRuta] = useState(leerRuta);

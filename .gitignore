@@ -25,3 +25,6 @@ service-account*.json
 # SO / editor
 .DS_Store
 *.log
+
+# Datos de la tesis real (se regeneran en cada build)
+/data/tesis/

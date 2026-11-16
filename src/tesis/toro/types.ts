@@ -3,8 +3,8 @@ import type { DeskObservation, MetricUnit } from "../esquemas/mercado";
 
 export type { MetricUnit };
 
-/** De dónde sale un número. Se muestra junto a cada cifra para que el lector sepa qué puede verificar. */
-export type Provenance = "calculado" | "simulado" | "mesa" | "citado";
+/** Where a number comes from. Shown next to each figure so the reader knows what can be verified. */
+export type Provenance = "computed" | "simulated" | "desk" | "cited";
 
 export type Metric = {
   id: string;
@@ -18,10 +18,10 @@ export type Metric = {
 
 export type Label = { id: string; value: string };
 
-export type SpikeClass = "pico" | "cambio estructural";
+export type SpikeClass = "spike" | "structural change";
 export type SpikeEvent = { date: string; multiple: number; top10_share_pct: number; classification: SpikeClass };
 
-export type Quadrant = "confirmación" | "espejismo" | "oportunidad no narrada" | "deterioro confirmado" | "neutral" | "sin datos";
+export type Quadrant = "confirmation" | "mirage" | "unnarrated opportunity" | "confirmed deterioration" | "neutral" | "no data";
 
 export type Divergence = {
   week: string;

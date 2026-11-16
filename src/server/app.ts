@@ -26,8 +26,8 @@ const ConsultaResumenes = z.object({
   hasta: IsoDate.optional(),
   limite: z.coerce.number().int().min(1).max(400).optional(),
 });
-const Ticker = z.string().min(1).max(20).regex(/^[A-Za-z0-9 .\-/]+$/, "ticker inválido");
-const ConsultaBusqueda = z.object({ q: z.string().trim().min(2, "escribe al menos dos letras").max(120) });
+const Ticker = z.string().min(1).max(20).regex(/^[A-Za-z0-9 .\-/]+$/, "invalid ticker");
+const ConsultaBusqueda = z.object({ q: z.string().trim().min(2, "enter at least two letters").max(120) });
 
 export function parsear<T>(schema: z.ZodType<T>, valor: unknown): T {
   const r = schema.safeParse(valor);
@@ -106,7 +106,7 @@ export function rutasNoticias(enrutador: Enrutador, d: Dependencias): Enrutador 
     .agregar("GET", "/api/resumenes/:fecha", async ({ res, params }) => {
       const fecha = parsear(IsoDate, params.fecha);
       const r = await repo.obtener(fecha);
-      if (!r) throw new ErrorHttp(404, `No hay resumen para el ${fecha}`);
+      if (!r) throw new ErrorHttp(404, `No digest for ${fecha}`);
       enviarJson(res, 200, r);
     })
     .agregar("GET", "/api/estadisticas", async ({ res }) => enviarJson(res, 200, estadisticas(await repo.listar())))
@@ -114,7 +114,7 @@ export function rutasNoticias(enrutador: Enrutador, d: Dependencias): Enrutador 
     .agregar("GET", "/api/tickers/:ticker", async ({ res, params }) => {
       const ticker = parsear(Ticker, params.ticker).toUpperCase();
       const historial = historialTicker(await repo.listar(), ticker);
-      if (historial.length === 0) throw new ErrorHttp(404, `No hay menciones de ${ticker}`);
+      if (historial.length === 0) throw new ErrorHttp(404, `No mentions of ${ticker}`);
       enviarJson(res, 200, { ticker, historial });
     })
     .agregar("GET", "/api/buscar", async ({ res, url }) => {
@@ -142,23 +142,23 @@ export function crearManejador(d: Dependencias, enrutador: Enrutador, guardia: G
       if (esApi) {
         const limite = limitador.permitir(ip);
         if (!limite.ok) {
-          enviarJson(res, 429, { error: "Demasiadas peticiones. Intenta de nuevo en un momento." }, { "Retry-After": String(limite.reintentarEn) });
+          enviarJson(res, 429, { error: "Too many requests. Try again in a moment." }, { "Retry-After": String(limite.reintentarEn) });
           return;
         }
       }
       const encontrada = enrutador.buscar(metodo, url.pathname);
-      if (encontrada === "metodo") throw new ErrorHttp(405, "Método no permitido");
+      if (encontrada === "metodo") throw new ErrorHttp(405, "Method not allowed");
       if (encontrada) {
         const ctx: Contexto = { req, res, url, params: encontrada.params, ip };
         if (!encontrada.ruta.publica) await guardia(ctx);
         await encontrada.ruta.manejador(ctx);
         return;
       }
-      if (esApi) throw new ErrorHttp(404, "Ruta no encontrada");
+      if (esApi) throw new ErrorHttp(404, "Route not found");
       if ((metodo === "GET" || metodo === "HEAD") && servirEstatico(d.distDir, url.pathname, res, metodo)) return;
-      if (metodo !== "GET" && metodo !== "HEAD") throw new ErrorHttp(405, "Método no permitido");
+      if (metodo !== "GET" && metodo !== "HEAD") throw new ErrorHttp(405, "Method not allowed");
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("No encontrado. ¿Ejecutaste pnpm build?");
+      res.end("Not found. Did you run pnpm build?");
     } catch (err) {
       if (res.headersSent) {
         res.end();
@@ -168,8 +168,8 @@ export function crearManejador(d: Dependencias, enrutador: Enrutador, guardia: G
         enviarJson(res, err.status, { error: err.message });
         return;
       }
-      log.error("error no controlado", { metodo, ruta: url.pathname, query: url.search, ip, error: (err as Error).stack ?? String(err) });
-      enviarJson(res, 500, { error: "Error interno. Revisa los logs del servidor." });
+      log.error("unhandled error", { metodo, ruta: url.pathname, query: url.search, ip, error: (err as Error).stack ?? String(err) });
+      enviarJson(res, 500, { error: "Internal error. Check the server logs." });
     }
   };
 }

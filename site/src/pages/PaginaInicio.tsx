@@ -17,28 +17,28 @@ const MOTAS = Array.from({ length: 26 }, (_, i) => ({
 
 export const PREGUNTAS = [
   {
-    q: "¿Qué es ubitwo?",
-    a: "Un panel con dos partes. Noticias: cada día un bot resume lo que dicen las cuentas que sigues y ubitwo lo ordena por activo, postura y evidencia. Tesis: tres agentes (Oso, Bisonte y Toro) ponen a prueba una hipótesis de inversión con datos reproducibles.",
+    q: "What is ubitwo?",
+    a: "A desk with two parts. News: each day a bot digests what the accounts you follow said, and ubitwo sorts it by asset, stance, and evidence. Thesis: three agents (Bear, Bison, and Bull) stress-test an investment hypothesis with reproducible data.",
   },
   {
-    q: "¿De dónde salen las noticias?",
-    a: "De una base de datos de Notion donde el bot escribe un resumen diario. ubitwo lo sincroniza con Supabase y lo muestra aquí. Lo que dicen las publicaciones es evidencia para leer, no una instrucción ni un dato verificado.",
+    q: "Where does the news come from?",
+    a: "From a Notion database where the bot writes a daily digest. ubitwo syncs it to Supabase and shows it here. What posts say is evidence to read, not an instruction or a verified fact.",
   },
   {
-    q: "¿Qué hace cada agente?",
-    a: "Oso lee Notion y una lista fija de cuentas de X; Bisonte consulta datos on-chain; Toro cruza ambas lecturas y escribe la tesis. Cada uno se evalúa por separado: entradas, salidas y validaciones.",
+    q: "What does each agent do?",
+    a: "Bear reads Notion and a fixed list of X accounts; Bison queries on-chain data; Bull crosses both readings and writes the thesis. Each is scored separately: inputs, outputs, and validations.",
   },
   {
-    q: "¿Por qué ninguna cifra de la tesis está escrita a mano?",
-    a: "TESIS.md y las frases de las gráficas solo tienen marcadores. La verificación los llena con métricas calculadas y falla si queda un dígito suelto.",
+    q: "Why is no figure in the thesis handwritten?",
+    a: "TESIS.md and chart sentences only hold placeholders. Verification fills them with computed metrics and fails if a stray digit remains.",
   },
   {
-    q: "¿Qué es un espejismo?",
-    a: "Una semana en la que el sentimiento de Oso sube y la actividad on-chain de Bisonte no lo acompaña. Un rally sin confirmación no mueve la tesis.",
+    q: "What is a mirage?",
+    a: "A week when Bear's sentiment rises and Bison's on-chain activity does not follow. A rally without confirmation does not move the thesis.",
   },
   {
-    q: "¿Necesito iniciar sesión?",
-    a: "Depende de cómo se configure el servidor. En tu computadora el panel está abierto; publicado, solo entran los correos autorizados con un enlace mágico.",
+    q: "Do I need to sign in?",
+    a: "It depends on how the server is configured. On your machine the desk is open; when published, only authorized emails can enter with a magic link.",
   },
 ];
 
@@ -84,36 +84,36 @@ export function PaginaInicio({ estado }: { estado: Estado | null }) {
         <header className="world-top">
           <div className="world-brand">
             <a href="#/" className="world-logo">ubitwo</a>
-            <p className="world-by">Noticias de mercado · tesis con evidencia</p>
+            <p className="world-by">Market news · thesis with evidence</p>
           </div>
-          <nav className="world-nav" aria-label="Principal">
-            <a href="#/noticias">Noticias</a>
+          <nav className="world-nav" aria-label="Main">
+            <a href="#/news">News</a>
             <a href="#/tickers">Tickers</a>
-            <a href="#/preguntar">Pregunta</a>
-            <a href="#/tesis">Tesis</a>
-            <a href="#/estado">Estado</a>
+            <a href="#/ask">Ask</a>
+            <a href="#/thesis">Thesis</a>
+            <a href="#/status">Status</a>
           </nav>
         </header>
 
         <div className="hero-grid">
           <div className="world-copy">
-            <p className="world-kicker">{hoy ? formatoFechaLarga(hoy.fecha) : "el ágora de tus noticias"}</p>
+            <p className="world-kicker">{hoy ? formatoFechaLarga(hoy.fecha) : "the agora of your news"}</p>
             <h1>{titularDelDia(hoy?.sesgo ?? null)}</h1>
-            <p className="world-quote">«Quien no trae evidencia, no habla».</p>
-            <p>{hoy?.contexto || "Cuando el bot publique el resumen del día, aquí verás el contexto del mercado en una frase."}</p>
+            <p className="world-quote">“No evidence, no voice.”</p>
+            <p>{hoy?.contexto || "When the bot publishes today's digest, you will see the market context in one sentence here."}</p>
             <div className="hero-ctas">
-              <a className="cta" href="#/noticias">Ver las noticias de hoy</a>
-              <a className="cta cta-ghost" href="#/preguntar">Hacer una pregunta</a>
+              <a className="cta" href="#/news">See today's news</a>
+              <a className="cta cta-ghost" href="#/ask">Ask a question</a>
             </div>
             <p className="cta-note">
-              <span className="live-dot" /> {estado ? (estado.demo ? "datos de demostración" : `fuente: ${estado.fuente}`) : "conectando…"}
-              {hoy ? ` · ${plural(hoy.activos.length, "activo", "activos")} · ${plural(hoy.cuentas.length, "cuenta", "cuentas")}` : ""}
+              <span className="live-dot" /> {estado ? (estado.demo ? "demo data" : `source: ${estado.fuente}`) : "connecting…"}
+              {hoy ? ` · ${plural(hoy.activos.length, "asset", "assets")} · ${plural(hoy.cuentas.length, "account", "accounts")}` : ""}
             </p>
           </div>
 
           <aside className="verdict-card">
             <div className="verdict-card-top">
-              <span><i className="live-dot" /> Hoy en el ágora</span>
+              <span><i className="live-dot" /> Today in the agora</span>
               {hoy ? <InsigniaSesgo sesgo={hoy.sesgo} /> : <em>—</em>}
             </div>
             {destacados.length > 0 ? (
@@ -122,104 +122,104 @@ export function PaginaInicio({ estado }: { estado: Estado | null }) {
                   <li key={a.ticker}>
                     <a href={`#/tickers/${encodeURIComponent(a.ticker)}`} className="ticker-mini">{a.ticker}</a>
                     <InsigniaPostura postura={a.postura} />
-                    <span className="muted">{plural(a.evidencias.length, "evidencia", "evidencias")}</span>
+                    <span className="muted">{plural(a.evidencias.length, "evidence item", "evidence items")}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="muted">{ultimo.error ? ultimo.error.message : ultimo.cargando ? "Cargando…" : "Sin resumen todavía."}</p>
+              <p className="muted">{ultimo.error ? ultimo.error.message : ultimo.cargando ? "Loading…" : "No digest yet."}</p>
             )}
             <dl className="verdict-dl">
               <div>
-                <dt>Tesis</dt>
+                <dt>Thesis</dt>
                 <dd>{t?.hypothesis_verdict ?? "—"}</dd>
               </div>
               <div>
-                <dt>Postura</dt>
+                <dt>Stance</dt>
                 <dd>{t?.stance ?? "—"}</dd>
               </div>
               <div>
-                <dt>Régimen</dt>
+                <dt>Regime</dt>
                 <dd>{t?.regime ?? "—"}</dd>
               </div>
             </dl>
-            <a className="verdict-link" href="#/noticias">Abrir el panel completo →</a>
+            <a className="verdict-link" href="#/news">Open the full desk →</a>
           </aside>
         </div>
 
         <div className="orchestra">
-          <a className="actor actor-oso" href="#/tesis/social">
-            <span className="bubble">X no es un dato</span>
+          <a className="actor actor-oso" href="#/thesis/social">
+            <span className="bubble">X is not a datapoint</span>
             <SpriteOso />
-            <strong>Oso</strong>
+            <strong>Bear</strong>
           </a>
-          <a className="actor actor-tablet" href="#/noticias">
-            <span className="bubble">noticias</span>
+          <a className="actor actor-tablet" href="#/news">
+            <span className="bubble">news</span>
             <SpriteTablilla />
             <strong>Estela</strong>
           </a>
-          <a className="actor actor-bisonte" href="#/tesis/graficas">
+          <a className="actor actor-bisonte" href="#/thesis/charts">
             <span className="bubble">block_date</span>
             <SpriteBisonte />
-            <strong>Bisonte</strong>
+            <strong>Bison</strong>
           </a>
-          <a className="actor actor-toro" href="#/tesis">
-            <span className="bubble">{t?.hypothesis_verdict ?? "síntesis"}</span>
+          <a className="actor actor-toro" href="#/thesis">
+            <span className="bubble">{t?.hypothesis_verdict ?? "synthesis"}</span>
             <SpriteToro />
-            <strong>Toro</strong>
+            <strong>Bull</strong>
           </a>
         </div>
 
         <button type="button" className="ask" onClick={() => setFaq(true)}>
-          <span>?</span> Tengo una pregunta
+          <span>?</span> I have a question
         </button>
       </div>
 
       <div className="meander" aria-hidden="true" />
 
       <section className="forum" id="como-funciona">
-        <p className="roman">I · Cómo se usa</p>
-        <h2>Tres pasos, sin manual.</h2>
+        <p className="roman">I · How to use it</p>
+        <h2>Three steps, no manual.</h2>
         <div className="enter-grid">
           <article className="enter-card">
-            <h3>1. Lee el día</h3>
-            <p>En Noticias eliges un día y ves cada activo con su postura, la barra de acuerdo entre cuentas y las evidencias con su enlace.</p>
-            <a className="cta" href="#/noticias">Noticias</a>
+            <h3>1. Read the day</h3>
+            <p>In News you pick a day and see each asset with its stance, the agreement bar across accounts, and evidence with its link.</p>
+            <a className="cta" href="#/news">News</a>
           </article>
           <article className="enter-card">
-            <h3>2. Sigue un ticker</h3>
-            <p>En Tickers ves todo lo mencionado y, al tocar uno, su historia día por día.</p>
+            <h3>2. Follow a ticker</h3>
+            <p>In Tickers you see everything mentioned and, when you open one, its day-by-day history.</p>
             <a className="cta cta-ghost" href="#/tickers">Tickers</a>
           </article>
           <article className="enter-card">
-            <h3>3. Pregunta</h3>
-            <p>Escribe una pregunta («¿qué se dijo de BTC esta semana?») y ubitwo responde citando los días que usó.</p>
-            <a className="cta cta-ghost" href="#/preguntar">Pregunta</a>
+            <h3>3. Ask</h3>
+            <p>Write a question (“what was said about BTC this week?”) and ubitwo answers citing the days it used.</p>
+            <a className="cta cta-ghost" href="#/ask">Ask</a>
           </article>
         </div>
-        <button type="button" className="scroll-cue" onClick={() => irA("tesis-intro")}>¿Y la tesis? ↓</button>
+        <button type="button" className="scroll-cue" onClick={() => irA("tesis-intro")}>And the thesis? ↓</button>
       </section>
 
       <section className="forum" id="tesis-intro">
-        <p className="roman">II · La tesis</p>
-        <h2>Una hipótesis que rinde cuentas.</h2>
-        <p className="lede">Oso, Bisonte y Toro firman por separado. Si una cifra no viene de los datos, la tesis no se publica.</p>
+        <p className="roman">II · The thesis</p>
+        <h2>A hypothesis that accounts for itself.</h2>
+        <p className="lede">Bear, Bison, and Bull each sign separately. If a figure does not come from the data, the thesis is not published.</p>
         <div className="enter-grid">
           <article className="enter-card">
-            <h3>Leer la tesis</h3>
-            <p>El veredicto, los pilares y lo que la invalidaría.</p>
-            <a className="cta" href="#/tesis">Tesis</a>
+            <h3>Read the thesis</h3>
+            <p>The verdict, the pillars, and what would invalidate it.</p>
+            <a className="cta" href="#/thesis">Thesis</a>
           </article>
           <article className="enter-card">
-            <h3>Auditar a un agente</h3>
-            <p>Qué leyó, cómo razonó y si pasó sus validaciones.</p>
-            <a className="cta cta-ghost" href="#/tesis/agentes">Agentes</a>
+            <h3>Audit an agent</h3>
+            <p>What it read, how it reasoned, and whether it passed its validations.</p>
+            <a className="cta cta-ghost" href="#/thesis/agents">Agents</a>
           </article>
         </div>
       </section>
 
       {faq && (
-        <Overlay title="Preguntas frecuentes" onClose={() => setFaq(false)}>
+        <Overlay title="Frequently asked questions" onClose={() => setFaq(false)}>
           {PREGUNTAS.map((item, i) => (
             <div key={item.q} className="faq">
               <button type="button" className="faq-q" aria-expanded={abierta === i} onClick={() => setAbierta(abierta === i ? -1 : i)}>
@@ -230,8 +230,8 @@ export function PaginaInicio({ estado }: { estado: Estado | null }) {
             </div>
           ))}
           <div className="overlay-actions">
-            <a className="cta" href="#/metodologia">Metodología</a>
-            <a className="cta cta-ghost" href="#/estado">Estado</a>
+            <a className="cta" href="#/methodology">Methodology</a>
+            <a className="cta cta-ghost" href="#/status">Status</a>
           </div>
         </Overlay>
       )}

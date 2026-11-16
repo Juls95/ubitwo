@@ -3,7 +3,7 @@ import type { Inputs } from "./load";
 import type { Analysis } from "./types";
 import type { Violation } from "./verify";
 
-/** `status` es un id para el sitio (color del indicador); `name` y `detail` son texto visible en español. */
+/** `status` is an id for the site (indicator color); `name` and `detail` are visible English text. */
 export type Validation = { name: string; status: "pass" | "warn" | "fail" | "n/a"; detail: string };
 export type Run = { at: string; summary: string; details: Record<string, string | number | boolean | null> };
 export type AgentCard = {
@@ -40,94 +40,94 @@ export function buildAgents(inputs: Inputs, a: Analysis, violations: readonly Vi
   return [
     {
       id: "oso",
-      name: "Oso",
-      role: "Lectura psicológica: lo que dicen sobre NEAR las cuentas de confianza en X y en Notion.",
+      name: "Bear",
+      role: "Psychological read: what trusted X and Notion accounts say about NEAR.",
       does: [
-        "Lee TickersInfo, X Creative Output y X Account Analyses en Notion (con un token que solo vive en el entorno) y conserva las filas de NEAR, no las palabras inglesas «near» o «nearly».",
-        "Cada día consulta a xAI (Grok) con la herramienta x_search, limitada a la lista de cuentas y a ese día.",
-        "Un segundo modelo, intercambiable mediante una variable de entorno, convierte la respuesta en JSON validado con zod.",
-        "Descarta publicaciones que xAI no citó, publicaciones de cuentas fuera de la lista, de otra fecha o duplicadas.",
-        "Calcula un puntaje de credibilidad determinista y un índice semanal de sentimiento.",
-        "Mantiene una lista curada de cifras de mesas (cuentas públicas citadas en Notion) y etiqueta cada una como afirmación de una mesa, nunca como medición.",
+        "Reads TickersInfo, X Creative Output, and X Account Analyses in Notion (with a token that lives only in the environment) and keeps NEAR rows, not the English words \"near\" or \"nearly\".",
+        "Each day queries xAI (Grok) with the x_search tool, limited to the account list and that day.",
+        "A second model, swappable via an environment variable, turns the response into JSON validated with zod.",
+        "Discards posts that xAI did not cite, posts from accounts outside the list, from another date, or duplicates.",
+        "Computes a deterministic credibility score and a weekly sentiment index.",
+        "Maintains a curated list of desk figures (public accounts cited in Notion) and tags each as a desk claim, never as a measurement.",
       ],
-      inputs: ["config/oso.handles.yaml", "config/oso.notion.yaml", "NOTION_TOKEN", "API Responses de xAI · x_search", "LLM_PROVIDER / LLM_MODEL"],
+      inputs: ["config/oso.handles.yaml", "config/oso.notion.yaml", "NOTION_TOKEN", "xAI Responses API · x_search", "LLM_PROVIDER / LLM_MODEL"],
       outputs: ["data/tesis/oso/daily/YYYY-MM-DD.json", "data/tesis/oso/weekly/YYYY-Www.json", "data/tesis/oso/notion/near.json"],
       runs: osoDaily.slice(-14).reverse().map((d) => ({
         at: d.date,
-        summary: `${d.posts.length} publicaciones verificadas · ${d.discarded.length} descartadas`,
+        summary: `${d.posts.length} verified posts · ${d.discarded.length} discarded`,
         details: { reconstructed: d.reconstructed, search: d.search_model, structuring: d.structuring_model, posts_read: d.posts_fetched },
       })),
       validations: [
-        { name: "Se descartan las publicaciones sin cita de xAI", status: "pass", detail: `${reasons("not_in_citations")} descartadas` },
-        { name: "Se descartan las cuentas fuera de la lista", status: "pass", detail: `${reasons("handle_not_allowed")} descartadas` },
-        { name: "Se descartan las publicaciones fuera de la fecha", status: "pass", detail: `${reasons("outside_date_window")} descartadas` },
-        { name: "Las semanas reconstruidas están marcadas", status: reconstructedWeeks > 0 ? "warn" : "pass", detail: `${reconstructedWeeks} de ${inputs.osoWeekly.length} semanas son reconstruidas` },
+        { name: "Posts without an xAI citation are discarded", status: "pass", detail: `${reasons("not_in_citations")} discarded` },
+        { name: "Accounts outside the list are discarded", status: "pass", detail: `${reasons("handle_not_allowed")} discarded` },
+        { name: "Posts outside the date window are discarded", status: "pass", detail: `${reasons("outside_date_window")} discarded` },
+        { name: "Reconstructed weeks are marked", status: reconstructedWeeks > 0 ? "warn" : "pass", detail: `${reconstructedWeeks} of ${inputs.osoWeekly.length} weeks are reconstructed` },
         {
-          name: "Las cifras de las mesas se etiquetan como afirmaciones",
+          name: "Desk figures are tagged as claims",
           status: inputs.desk ? "pass" : "n/a",
-          detail: inputs.desk ? `${inputs.desk.figures.length} cifras, ${inputs.desk.observations.length} observaciones, ${inputs.desk.desks.length} mesas` : "no hay archivo curado de mesas en esta compilación",
+          detail: inputs.desk ? `${inputs.desk.figures.length} figures, ${inputs.desk.observations.length} observations, ${inputs.desk.desks.length} desks` : "no curated desk file in this build",
         },
         {
-          name: "Expediente de NEAR en Notion",
+          name: "NEAR Notion dossier",
           status: notion ? "pass" : "n/a",
           detail: notion
-            ? `${notion.hits.length} filas de NEAR · ${notion.counts.discarded_false_positives} falsos positivos descartados`
-            : "no se ejecutó (falta NOTION_TOKEN o el artefacto)",
+            ? `${notion.hits.length} NEAR rows · ${notion.counts.discarded_false_positives} false positives discarded`
+            : "not run (missing NOTION_TOKEN or artifact)",
         },
       ],
     },
     {
       id: "bisonte",
-      name: "Bisonte",
-      role: "Lectura técnica: actividad on-chain de NEAR y volumen de 1Click Swap.",
+      name: "Bison",
+      role: "Technical read: NEAR on-chain activity and 1Click Swap volume.",
       does: [
-        "Consulta el conjunto de datos público de NEAR en BigQuery con consultas versionadas y parametrizadas.",
-        "Ejecuta una simulación (dry run) antes de cada consulta y aborta si supera BQ_MAX_BYTES.",
-        "Descarga los swaps exitosos de 1Click desde Intents Explorer, respetando su límite de una petición cada cinco segundos.",
-        "Guarda los datos crudos y un manifiesto para que todo se pueda reconstruir sin credenciales.",
-        "Le entrega a Toro velas diarias de NEAR y BTC cuando hay una fuente de precios configurada; sin ella, cada métrica técnica se reporta como no disponible.",
+        "Queries the public NEAR BigQuery dataset with versioned, parameterized queries.",
+        "Runs a dry run before each query and aborts if it exceeds BQ_MAX_BYTES.",
+        "Downloads successful 1Click swaps from Intents Explorer, respecting its one-request-per-five-seconds limit.",
+        "Stores raw data and a manifest so everything can be reconstructed without credentials.",
+        "Hands Bull daily NEAR and BTC candles when a price source is configured; without one, every technical metric is reported as unavailable.",
       ],
-      inputs: ["bigquery-public-data.crypto_near_mainnet_us", "API de Intents Explorer (JWT)", "src/tesis/bisonte/bq/queries/*.sql"],
+      inputs: ["bigquery-public-data.crypto_near_mainnet_us", "Intents Explorer API (JWT)", "src/tesis/bisonte/bq/queries/*.sql"],
       outputs: ["data/tesis/raw/bq/*.json", "data/tesis/raw/intents/intents_daily.json", "data/tesis/raw/manifest.json"],
       runs: manifest.items.map((i) => ({
         at: i.fetched_at.slice(0, 10),
-        summary: `${i.id}: ${i.rows} filas`,
+        summary: `${i.id}: ${i.rows} rows`,
         details: { source: i.source, query: i.query_file, endpoint: i.endpoint, bytes: i.bytes_processed },
       })),
       validations: [
-        { name: "Cada consulta filtra por block_date", status: partitionOk ? "pass" : "fail", detail: `${queryIds.length} consultas revisadas` },
-        { name: "Bytes por consulta por debajo del tope", status: overCap.length ? "fail" : inputs.mode === "mock" ? "n/a" : "pass", detail: inputs.mode === "mock" ? "sin BigQuery en modo mock" : `${overCap.length} por encima del tope` },
-        { name: "Actualidad del conjunto de datos", status: lagDays === null ? "fail" : lagDays <= 2 ? "pass" : "warn", detail: lastBlock ? `último bloque ${lastBlock} (${lagDays} ${lagDays === 1 ? "día" : "días"} de atraso)` : "sin datos de actualidad" },
+        { name: "Every query filters by block_date", status: partitionOk ? "pass" : "fail", detail: `${queryIds.length} queries reviewed` },
+        { name: "Bytes per query under the cap", status: overCap.length ? "fail" : inputs.mode === "mock" ? "n/a" : "pass", detail: inputs.mode === "mock" ? "no BigQuery in mock mode" : `${overCap.length} over the cap` },
+        { name: "Dataset freshness", status: lagDays === null ? "fail" : lagDays <= 2 ? "pass" : "warn", detail: lastBlock ? `last block ${lastBlock} (${lagDays} ${lagDays === 1 ? "day" : "days"} lag)` : "no freshness data" },
         {
-          name: "Velas de precio",
+          name: "Price candles",
           status: inputs.price ? (inputs.mode === "mock" ? "n/a" : "warn") : "n/a",
           detail: inputs.price
-            ? inputs.mode === "mock" ? "velas simuladas" : `fuente ${inputs.price.near.source}: confirmar que sea una fuente aprobada`
-            : "no hay fuente de precios configurada; las métricas técnicas no están disponibles",
+            ? inputs.mode === "mock" ? "simulated candles" : `source ${inputs.price.near.source}: confirm it is an approved source`
+            : "no price source configured; technical metrics are unavailable",
         },
-        { name: "Datos validados con zod", status: "pass", detail: `${manifest.items.length} conjuntos de datos` },
+        { name: "Data validated with zod", status: "pass", detail: `${manifest.items.length} datasets` },
       ],
     },
     {
       id: "toro",
-      name: "Toro",
-      role: "Síntesis: cruza a Oso con Bisonte y escribe la tesis.",
+      name: "Bull",
+      role: "Synthesis: crosses Bear with Bison and writes the thesis.",
       does: [
-        "Calcula las métricas con funciones puras a partir de los datos crudos.",
-        "Arma cada gráfica con su consulta y una oración en lenguaje llano.",
-        "Cruza sentimiento y actividad para separar las confirmaciones de los espejismos.",
-        "Calcula la capa técnica sobre las velas: promedios, rango y niveles de Fibonacci, marcas nPOC, fuerza relativa, beta frente a BTC y un conteo de confluencia.",
-        "Contrasta la alarma del promedio semanal de BTC y las tesis de referencia como contexto, etiquetadas como citadas y sin verificar.",
-        "Escribe TESIS.md a partir de una plantilla en la que cada cifra sale de un marcador.",
+        "Computes metrics with pure functions from raw data.",
+        "Builds each chart with its query and a plain-language sentence.",
+        "Crosses sentiment and activity to separate confirmations from mirages.",
+        "Computes the technical layer on the candles: averages, range and Fibonacci levels, nPOC marks, relative strength, beta vs BTC, and a confluence count.",
+        "Contrasts the BTC weekly-average tripwire and reference theses as context, tagged as cited and unverified.",
+        "Writes TESIS.md from a template where every figure comes from a placeholder.",
       ],
       inputs: ["data/tesis/raw/**", "data/tesis/oso/**", "src/tesis/toro/params.ts"],
-      outputs: ["data/tesis/TESIS.md", "data/tesis/derived/metrics.json", "dist/ (sitio)"],
-      runs: [{ at: a.generated_at.slice(0, 10), summary: `${Object.keys(a.metrics).length} métricas · ${a.divergences.length} semanas cruzadas`, details: { mode: a.mode } }],
+      outputs: ["data/tesis/TESIS.md", "data/tesis/derived/metrics.json", "dist/ (site)"],
+      runs: [{ at: a.generated_at.slice(0, 10), summary: `${Object.keys(a.metrics).length} metrics · ${a.divergences.length} weeks crossed`, details: { mode: a.mode } }],
       validations: [
-        { name: "Ninguna cifra escrita a mano", status: violations.length ? "fail" : "pass", detail: violations.length ? violations.map((v) => v.check).join("; ") : "cada cifra sale de metrics.json" },
-        { name: "Cada gráfica tiene una consulta y una oración", status: violations.some((v) => v.check.startsWith("gráfica")) ? "fail" : "pass", detail: "revisado por verify" },
-        { name: "Cada cifra lleva una etiqueta de procedencia", status: "pass", detail: "calculado, simulado, mesa o citado" },
-        { name: "Nunca se mezclan datos simulados y reales", status: "pass", detail: `modo ${a.mode}` },
+        { name: "No hand-written figures", status: violations.length ? "fail" : "pass", detail: violations.length ? violations.map((v) => v.check).join("; ") : "every figure comes from metrics.json" },
+        { name: "Every chart has a query and a sentence", status: violations.some((v) => v.check.startsWith("chart")) ? "fail" : "pass", detail: "reviewed by verify" },
+        { name: "Every figure carries a provenance tag", status: "pass", detail: "computed, simulated, desk, or cited" },
+        { name: "Simulated and live data are never mixed", status: "pass", detail: `mode ${a.mode}` },
       ],
     },
   ];

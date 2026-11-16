@@ -1,4 +1,4 @@
-/** mulberry32: PRNG determinista y diminuto para que el escenario simulado sea idéntico en cada ejecución. */
+/** mulberry32: tiny deterministic PRNG so the simulated scenario is identical every run. */
 export function createRng(seed: number) {
   let a = seed >>> 0;
   const next = () => {

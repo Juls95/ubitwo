@@ -10,7 +10,7 @@ export const HttpsUrl = z.string().refine((value) => {
   } catch {
     return false;
   }
-}, "se esperaba una URL https");
+}, "expected an https URL");
 
-export const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "se esperaba AAAA-MM-DD");
-export const IsoWeek = z.string().regex(/^\d{4}-W\d{2}$/, "se esperaba AAAA-Wss");
+export const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected YYYY-MM-DD");
+export const IsoWeek = z.string().regex(/^\d{4}-W\d{2}$/, "expected YYYY-Www");

@@ -2,19 +2,19 @@ import { z } from "zod";
 import type { LlmClient } from "../../llm/types";
 import { ExtractedPost, type Discarded } from "../esquemas/oso";
 
-export const STRUCTURING_SYSTEM = `Conviertes en JSON una respuesta de investigación sobre publicaciones de X.
-Reglas:
-- Incluye solo publicaciones que aparezcan en la lista CITAS proporcionada; copia la URL exactamente.
-- "paraphrase": con tus propias palabras, en español, máximo 240 caracteres. Nunca copies el texto de la publicación literalmente.
-- "contains_numeric_claim": true si la publicación menciona una cifra (usuarios, volumen, TVL, precio, crecimiento...).
-- "primary_source_url": un enlace en la publicación a near.org, documentación, GitHub, un explorador o un panel oficial; si no, null.
-- "claim_type": announcement | metric | opinion | promo | other. Sorteos, enlaces de referidos y llamados tipo "100x" son promo.
-- "sentiment": de -1 (muy negativa sobre NEAR) a 1 (muy positiva).
-- No inventes publicaciones, fechas ni números. Si tienes dudas, omite la publicación.
-Devuelve solo {"posts":[...]}.`;
+export const STRUCTURING_SYSTEM = `You convert a research answer about X posts into JSON.
+Rules:
+- Include only posts that appear in the provided CITATIONS list; copy the URL exactly.
+- "paraphrase": in your own words, in English, max 240 characters. Never copy the post text literally.
+- "contains_numeric_claim": true if the post mentions a figure (users, volume, TVL, price, growth...).
+- "primary_source_url": a link in the post to near.org, docs, GitHub, an explorer, or an official dashboard; otherwise null.
+- "claim_type": announcement | metric | opinion | promo | other. Giveaways, referral links, and "100x"-style calls are promo.
+- "sentiment": from -1 (very negative on NEAR) to 1 (very positive).
+- Do not invent posts, dates, or numbers. If unsure, omit the post.
+Return only {"posts":[...]}.`;
 
 export function structuringPrompt(searchAnswer: string, citations: readonly string[], date: string): string {
-  return `FECHA (UTC): ${date}\nCITAS:\n${citations.join("\n")}\n\nRESPUESTA DE INVESTIGACIÓN:\n${searchAnswer}`;
+  return `DATE (UTC): ${date}\nCITATIONS:\n${citations.join("\n")}\n\nRESEARCH ANSWER:\n${searchAnswer}`;
 }
 
 const STATUS_URL = /^https:\/\/(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status\/(\d+)/;
@@ -33,8 +33,8 @@ export type VerifyInput = {
 };
 
 /**
- * Compuerta contra alucinaciones: una publicación sobrevive solo si está bien formada, la citó xAI,
- * la escribió una cuenta permitida, cae dentro del día solicitado y no está duplicada.
+ * Anti-hallucination gate: a post survives only if it is well-formed, cited by xAI,
+ * written by an allowed account, falls inside the requested day, and is not a duplicate.
  */
 export function verifyPosts({ posts, citations, allowedHandles, date }: VerifyInput): { kept: ExtractedPost[]; discarded: Discarded[] } {
   const cited = new Set([...citations].map((u) => normalizeStatusUrl(u)?.canonical).filter((u): u is string => Boolean(u)));

@@ -1,79 +1,79 @@
 # ubitwo
 
-Tu panel de noticias de mercado y una tesis de inversión que rinde cuentas.
+Your market-news desk and an investment thesis that accounts for itself.
 
-- **Noticias.** Cada día un bot escribe en Notion un resumen de lo que dicen las cuentas que sigues. ubitwo lo sincroniza con Supabase y lo muestra por día, por activo y por postura, con la evidencia enlazada. Puedes buscar y hacer preguntas.
-- **Tesis.** Tres agentes ponen a prueba una hipótesis con datos reproducibles: **Oso** lee Notion y X, **Bisonte** consulta datos on-chain y **Toro** cruza ambas lecturas y escribe la tesis. Ninguna cifra se escribe a mano.
+- **News.** Each day a bot writes a Notion digest of what the accounts you follow are saying. ubitwo syncs it to Supabase and shows it by day, asset, and stance, with linked evidence. You can search and ask questions.
+- **Thesis.** Three agents stress-test a hypothesis with reproducible data: **Bear** reads Notion and X, **Bison** queries on-chain data, and **Bull** crosses both readings and writes the thesis. No figure is typed by hand.
 
-## Empezar en un minuto
+## Start in a minute
 
-Requisitos: Node 22 y pnpm 10 (`corepack enable`).
+Requirements: Node 22 and pnpm 10 (`corepack enable`).
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm demo            # construye el sitio y lo abre en http://localhost:3000 con datos de demostración
+pnpm demo            # builds the site and opens it at http://localhost:3000 with demo data
 ```
 
-Para desarrollar con recarga en caliente, en dos terminales:
+For hot reload during development, use two terminals:
 
 ```bash
-pnpm dev:server      # API en :3000
-pnpm dev             # sitio en :5173 (reenvía /api al servidor)
+pnpm dev:server      # API on :3000
+pnpm dev             # site on :5173 (proxies /api to the server)
 ```
 
-## Conectar tus datos
+## Connect your data
 
-Todo es opcional y ubitwo te dice qué falta:
+Everything is optional and ubitwo tells you what is missing:
 
 ```bash
 cp .env.example .env
 pnpm check-env
 ```
 
-La guía paso a paso para **Supabase, Notion y Render** está en [`docs/conectar-render-notion-supabase.md`](docs/conectar-render-notion-supabase.md). En el sitio, la página **Estado** muestra lo mismo.
+The step-by-step guide for **Supabase, Notion, and Render** is in [`docs/conectar-render-notion-supabase.md`](docs/conectar-render-notion-supabase.md). On the site, the **Status** page shows the same.
 
-## Páginas
+## Pages
 
-| Página | Qué ves |
+| Page | What you see |
 | --- | --- |
-| Inicio | El sesgo del día, el contexto y los activos destacados. |
-| Noticias | Pestañas por día, filtros por postura y tipo, tarjetas con evidencia y buscador. |
-| Tickers | Todo lo mencionado y el historial de cada ticker. |
-| Pregunta | Preguntas en lenguaje natural sobre los resúmenes guardados. |
-| Tesis | Veredicto, gráficas, lectura social y el expediente de cada agente. |
-| Metodología | Fuentes, parámetros prerregistrados y límites. |
-| Estado | Qué está conectado (sin mostrar valores). |
+| Home | The day's bias, context, and highlighted assets. |
+| News | Day tabs, stance and type filters, evidence cards, and search. |
+| Tickers | Everything mentioned and each ticker's history. |
+| Ask | Natural-language questions over the saved digests. |
+| Thesis | Verdict, charts, social reading, and each agent's dossier. |
+| Methodology | Sources, pre-registered parameters, and limits. |
+| Status | What is connected (never values). |
 
-## Comandos
+## Commands
 
-| Comando | Para qué |
+| Command | Purpose |
 | --- | --- |
-| `pnpm demo` | Construir y servir con datos de demostración. |
-| `pnpm build` / `pnpm start` | Construir (tesis + sitio) y servir. |
-| `pnpm noticias:sync --dias 30` | Traer resúmenes de Notion a Supabase. |
-| `pnpm tesis:refresh` | Datos reales de la tesis (requiere credenciales) y regenerarla. |
-| `pnpm tesis:verificar` | Comprobar que la tesis no tiene cifras escritas a mano. |
-| `pnpm check` | Lint (advertencias = errores), tipos y pruebas. |
-| `pnpm check-env` | Qué funciones están activas con tus variables. |
+| `pnpm demo` | Build and serve with demo data. |
+| `pnpm build` / `pnpm start` | Build (thesis + site) and serve. |
+| `pnpm noticias:sync --dias 30` | Pull digests from Notion into Supabase. |
+| `pnpm tesis:refresh` | Live thesis data (needs credentials) and regenerate. |
+| `pnpm tesis:verificar` | Check that the thesis has no hand-typed figures. |
+| `pnpm check` | Lint (warnings = errors), types, and tests. |
+| `pnpm check-env` | Which features are active with your variables. |
 
-## Arquitectura
+## Architecture
 
 ```text
-Notion (bot diario) ──noticias:sync──▶ Supabase (resumenes_diarios, RLS)
-                                             │ service role (solo servidor)
-navegador ──/api──▶ servidor node:http ──────┘
-   ▲                 │  sesión firmada (Supabase Auth, enlace mágico)
-   └── dist/ ◀── vite build ◀── tesis (Oso · Bisonte · Toro) ──▶ tesis.json
+Notion (daily bot) ──noticias:sync──▶ Supabase (resumenes_diarios, RLS)
+                                             │ service role (server only)
+browser ──/api──▶ node:http server ──────────┘
+   ▲                 │  signed session (Supabase Auth, magic link)
+   └── dist/ ◀── vite build ◀── thesis (Bear · Bison · Bull) ──▶ tesis.json
 ```
 
-- `src/noticias`: esquema del resumen (zod), normalización, demo, repositorio (Supabase/local/memoria) y sincronización.
-- `src/server`: API, estáticos, cabeceras de seguridad, límites de peticiones, acceso y preguntas.
-- `src/llm`: capa de IA intercambiable (Gemini por defecto; cambiar de modelo = cambiar `LLM_MODEL`).
-- `src/tesis`: el pipeline de los tres agentes.
-- `site/`: la interfaz (React + Vite).
+- `src/noticias`: digest schema (zod), normalization, demo, repository (Supabase/local/memory), and sync.
+- `src/server`: API, statics, security headers, rate limits, access, and Ask.
+- `src/llm`: swappable AI layer (Gemini by default; changing models = changing `LLM_MODEL`).
+- `src/tesis`: the three-agent pipeline.
+- `site/`: the UI (React + Vite).
 
-## Seguridad
+## Security
 
-Lee [`SEGURIDAD.md`](SEGURIDAD.md) y [`docs/politica-de-dependencias.md`](docs/politica-de-dependencias.md). En corto: versiones exactas con al menos 7 días de antigüedad, sin scripts de instalación, secretos solo en el servidor, contenido externo tratado como evidencia y nunca como instrucciones.
+Read [`SECURITY.md`](SECURITY.md) and [`docs/politica-de-dependencias.md`](docs/politica-de-dependencias.md). In short: exact versions at least 7 days old, no install scripts, secrets only on the server, external content treated as evidence never as instructions.
 
-Esto no es asesoría financiera.
+This is not financial advice.

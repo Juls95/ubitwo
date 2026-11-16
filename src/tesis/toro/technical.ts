@@ -6,7 +6,7 @@ import type { ConfluenceItem, Metric, MetricUnit, Npoc } from "./types";
 
 export const FIB = [0.382, 0.5, 0.618, 0.786] as const;
 
-const NO_PRICE = "no disponible";
+const NO_PRICE = "not available";
 
 export type PriceData = { near: PriceSeries; btc: PriceSeries };
 
@@ -14,7 +14,7 @@ export function sma(values: readonly number[], n: number): number | null {
   return values.length < n ? null : mean(values.slice(-n));
 }
 
-/** RSI de Wilder sobre toda la serie. */
+/** Wilder RSI over the full series. */
 export function rsi(closes: readonly number[], n: number): number | null {
   if (closes.length < n + 1) return null;
   let gain = 0;
@@ -40,9 +40,9 @@ function trueRange(bar: PriceBar, prevClose: number | null): number {
 }
 
 /**
- * Niveles nPOC abiertos en velas diarias. Una vela rápida dominada por el cuerpo (rango verdadero de al menos `impulseAtr` veces
- * el ATR previo) deja una marca sin llenar en la mitad de su cuerpo. El nivel sigue abierto hasta que una vela posterior CIERRA
- * en él o lo atraviesa (una mecha no cuenta). Es una aproximación con velas diarias del método intradía; ver la sección de metodología de la tesis.
+ * Open nPOC levels on daily candles. A fast body-dominated candle (true range at least `impulseAtr` times
+ * the prior ATR) leaves an unfilled mark at the midpoint of its body. The level stays open until a later candle CLOSES
+ * at or through it (a wick does not count). Daily-candle approximation of the intraday method; see the thesis methodology section.
  */
 export function findNpocs(
   bars: readonly PriceBar[],
@@ -74,7 +74,7 @@ export function rangeFramework(bars: readonly PriceBar[], lookback: number) {
   return { high, low, median: (high + low) / 2, fib: Object.fromEntries(FIB.map((r) => [r, low + r * (high - low)])) as Record<number, number> };
 }
 
-/** Último cierre de cada semana (que empieza en lunes), en orden ascendente. La última entrada es la semana en curso. */
+/** Last close of each week (Monday-start), ascending. The last entry is the current week. */
 export function weeklyCloses(bars: readonly PriceBar[]): number[] {
   const byWeek = new Map<string, number>();
   for (const b of bars) byWeek.set(weekStart(b.date), b.close);
@@ -92,7 +92,7 @@ function logReturns(bars: readonly PriceBar[]): Map<string, number> {
   return out;
 }
 
-/** Beta y correlación de los rendimientos logarítmicos diarios de NEAR frente a BTC en los últimos `lookback` días comunes. */
+/** Beta and correlation of daily NEAR log returns vs BTC over the last `lookback` common days. */
 export function betaToBtc(near: readonly PriceBar[], btc: readonly PriceBar[], lookback: number) {
   const a = logReturns(near);
   const b = logReturns(btc);
@@ -113,63 +113,63 @@ export function betaToBtc(near: readonly PriceBar[], btc: readonly PriceBar[], l
   return { beta: vx === 0 ? null : cov / vx, corr: vx === 0 || vy === 0 ? null : cov / Math.sqrt(vx * vy) };
 }
 
-export type TripwireState = "intacto" | "perforado, ventana de recuperación abierta" | "activado";
+export type TripwireState = "intact" | "pierced — recovery window open" | "triggered";
 
-/** Cierres semanales frente a un promedio semanal móvil; reproduce la lógica de alarma de «perder el promedio y no recuperarlo». */
+/** Weekly closes vs a weekly moving average; reproduces the "lose the average and fail to regain it" tripwire logic. */
 export function btcRegime(closes: readonly number[], wmaWeeks: number, regainWeeks: number) {
   if (closes.length < wmaWeeks) return null;
   const wmaAt = (k: number) => mean(closes.slice(k - wmaWeeks + 1, k + 1)) as number;
   const last = closes.length - 1;
   let run = 0;
   for (let k = last; k >= wmaWeeks - 1 && (closes[k] as number) < wmaAt(k); k--) run++;
-  const state: TripwireState = run === 0 ? "intacto" : run >= regainWeeks ? "activado" : "perforado, ventana de recuperación abierta";
+  const state: TripwireState = run === 0 ? "intact" : run >= regainWeeks ? "triggered" : "pierced — recovery window open";
   return { wma: wmaAt(last), close: closes[last] as number, weeksBelow: run, state };
 }
 
 type Spec = readonly [id: string, label: string, unit: MetricUnit];
 
 const SPEC: readonly Spec[] = [
-  ["near_close", "Último cierre diario de NEAR", "usd2"],
-  ["near_sma_fast", "Promedio móvil rápido de NEAR (diario)", "usd2"],
-  ["near_sma_slow", "Promedio móvil lento de NEAR (diario)", "usd2"],
-  ["near_vs_sma_slow_pct", "Cierre de NEAR frente al promedio lento", "pct"],
-  ["near_rsi", "RSI de NEAR (diario)", "ratio"],
-  ["range_high", "Máximo del rango", "usd2"],
-  ["range_low", "Mínimo del rango", "usd2"],
-  ["range_median", "Mediana del rango (ML)", "usd2"],
-  ["range_position_pct", "Posición del cierre dentro del rango", "pct"],
-  ["fib_382", "Nivel de Fibonacci 0.382 del rango", "usd2"],
-  ["fib_618", "Nivel de Fibonacci 0.618 del rango", "usd2"],
-  ["fib_786", "Nivel de Fibonacci 0.786 del rango", "usd2"],
-  ["fib_nearest_pct", "Distancia del cierre al nivel de Fibonacci más cercano", "pct"],
-  ["npoc_open_lower", "Niveles nPOC abiertos por debajo del cierre", "count"],
-  ["npoc_open_upper", "Niveles nPOC abiertos por encima del cierre", "count"],
-  ["npoc_open_total", "Niveles nPOC abiertos", "count"],
-  ["npoc_created_30d", "Marcas nPOC creadas en los últimos treinta días", "count"],
-  ["npoc_lower_level", "nPOC abierto más cercano por debajo del cierre", "usd2"],
-  ["npoc_lower_distance_pct", "Distancia al nPOC inferior más cercano", "pct"],
-  ["npoc_upper_level", "nPOC abierto más cercano por encima del cierre", "usd2"],
-  ["npoc_upper_distance_pct", "Distancia al nPOC superior más cercano", "pct"],
-  ["near_return_30d_pct", "Rendimiento de NEAR (treinta días)", "pct"],
-  ["btc_return_30d_pct", "Rendimiento de BTC (treinta días)", "pct"],
-  ["rs_vs_btc_30d_pp", "Rendimiento de NEAR menos el de BTC (treinta días)", "pp"],
-  ["near_beta_90d", "Beta de NEAR frente a BTC (rendimientos logarítmicos diarios)", "ratio"],
-  ["near_btc_corr_90d", "Correlación de NEAR con BTC (rendimientos logarítmicos diarios)", "corr"],
-  ["btc_close", "Último cierre diario de BTC", "usd"],
-  ["btc_wma", "Promedio móvil semanal de BTC", "usd"],
-  ["btc_vs_wma_pct", "Cierre semanal de BTC frente a su promedio semanal", "pct"],
-  ["btc_weeks_below_wma", "Cierres semanales consecutivos de BTC por debajo del promedio semanal", "count"],
-  ["btc_drawdown_pct", "Caída de BTC desde su máximo de cierre de cincuenta y dos semanas", "pct"],
-  ["confluence_score", "Criterios técnicos cumplidos", "count"],
-  ["confluence_total", "Criterios técnicos evaluados", "count"],
-  ["plan_entry", "Entrada ilustrativa (nPOC inferior más cercano)", "usd2"],
-  ["plan_stop", "Stop ilustrativo más allá del nPOC", "usd2"],
-  ["plan_t1", "Primer objetivo ilustrativo (mediana del rango)", "usd2"],
-  ["plan_t2", "Segundo objetivo ilustrativo", "usd2"],
-  ["plan_rr", "Relación beneficio-riesgo hasta el primer objetivo", "ratio"],
-  ["plan_size_units", "Tamaño de posición ilustrativo en NEAR", "count"],
-  ["plan_risk_usd", "Monto ilustrativo en riesgo", "usd"],
-  ["plan_account_usd", "Tamaño de la cuenta de ejemplo para la plantilla de riesgo", "usd"],
+  ["near_close", "Latest daily NEAR close", "usd2"],
+  ["near_sma_fast", "NEAR fast moving average (daily)", "usd2"],
+  ["near_sma_slow", "NEAR slow moving average (daily)", "usd2"],
+  ["near_vs_sma_slow_pct", "NEAR close vs slow average", "pct"],
+  ["near_rsi", "NEAR RSI (daily)", "ratio"],
+  ["range_high", "Range high", "usd2"],
+  ["range_low", "Range low", "usd2"],
+  ["range_median", "Range median (ML)", "usd2"],
+  ["range_position_pct", "Close position within the range", "pct"],
+  ["fib_382", "Fibonacci 0.382 level of the range", "usd2"],
+  ["fib_618", "Fibonacci 0.618 level of the range", "usd2"],
+  ["fib_786", "Fibonacci 0.786 level of the range", "usd2"],
+  ["fib_nearest_pct", "Distance from close to nearest Fibonacci level", "pct"],
+  ["npoc_open_lower", "Open nPOC levels below the close", "count"],
+  ["npoc_open_upper", "Open nPOC levels above the close", "count"],
+  ["npoc_open_total", "Open nPOC levels", "count"],
+  ["npoc_created_30d", "nPOC marks created in the last thirty days", "count"],
+  ["npoc_lower_level", "Nearest open nPOC below the close", "usd2"],
+  ["npoc_lower_distance_pct", "Distance to nearest lower nPOC", "pct"],
+  ["npoc_upper_level", "Nearest open nPOC above the close", "usd2"],
+  ["npoc_upper_distance_pct", "Distance to nearest upper nPOC", "pct"],
+  ["near_return_30d_pct", "NEAR return (thirty days)", "pct"],
+  ["btc_return_30d_pct", "BTC return (thirty days)", "pct"],
+  ["rs_vs_btc_30d_pp", "NEAR return minus BTC return (thirty days)", "pp"],
+  ["near_beta_90d", "NEAR beta vs BTC (daily log returns)", "ratio"],
+  ["near_btc_corr_90d", "NEAR-BTC correlation (daily log returns)", "corr"],
+  ["btc_close", "Latest daily BTC close", "usd"],
+  ["btc_wma", "BTC weekly moving average", "usd"],
+  ["btc_vs_wma_pct", "BTC weekly close vs its weekly average", "pct"],
+  ["btc_weeks_below_wma", "Consecutive BTC weekly closes below the weekly average", "count"],
+  ["btc_drawdown_pct", "BTC drawdown from its fifty-two-week closing high", "pct"],
+  ["confluence_score", "Technical criteria met", "count"],
+  ["confluence_total", "Technical criteria evaluated", "count"],
+  ["plan_entry", "Illustrative entry (nearest lower nPOC)", "usd2"],
+  ["plan_stop", "Illustrative stop beyond the nPOC", "usd2"],
+  ["plan_t1", "Illustrative first target (range median)", "usd2"],
+  ["plan_t2", "Illustrative second target", "usd2"],
+  ["plan_rr", "Reward-to-risk to the first target", "ratio"],
+  ["plan_size_units", "Illustrative position size in NEAR", "count"],
+  ["plan_risk_usd", "Illustrative amount at risk", "usd"],
+  ["plan_account_usd", "Sample account size for the risk template", "usd"],
 ];
 
 export type TechnicalResult = {
@@ -181,23 +181,23 @@ export type TechnicalResult = {
 };
 
 const CRITERIA = [
-  ["above_slow", "El cierre está por encima del promedio diario lento"],
-  ["above_fast", "El cierre está por encima del promedio diario rápido"],
-  ["weekly_up", "El cierre semanal está por encima del promedio semanal"],
-  ["discount", "El cierre está en la mitad de descuento del rango"],
-  ["npoc_near", "Hay un nPOC abierto cerca, por debajo del cierre"],
-  ["rsi_ok", "El RSI no está en sobrecompra"],
-  ["rs_positive", "NEAR rinde más que BTC"],
-  ["regime_up", "El régimen de adopción on-chain es de expansión"],
+  ["above_slow", "Close is above the slow daily average"],
+  ["above_fast", "Close is above the fast daily average"],
+  ["weekly_up", "Weekly close is above the weekly average"],
+  ["discount", "Close is in the discount half of the range"],
+  ["npoc_near", "An open nPOC is nearby below the close"],
+  ["rsi_ok", "RSI is not overbought"],
+  ["rs_positive", "NEAR outperforms BTC"],
+  ["regime_up", "On-chain adoption regime is expansion"],
 ] as const;
 
-/** Cálculo puro de toda la capa técnica. Sin datos de precio, cada valor es null y las etiquetas lo dicen. */
+/** Pure computation of the full technical layer. Without price data, every value is null and the labels say so. */
 export function computeTechnical(price: PriceData | null, regime: string | null): TechnicalResult {
   const values: Record<string, number | null> = Object.fromEntries(SPEC.map(([id]) => [id, null]));
   values.plan_account_usd = PARAMS.example_account_usd;
   const labels: Record<string, string> = {
-    near_trend: "sin datos", near_weekly_trend: "sin datos", range_zone: "sin datos", fib_nearest: "sin datos",
-    btc_tripwire: "sin datos", technical_bias: "sin datos", plan_status: "sin datos",
+    near_trend: "no data", near_weekly_trend: "no data", range_zone: "no data", fib_nearest: "no data",
+    btc_tripwire: "no data", technical_bias: "no data", plan_status: "no data",
   };
   const empty: ConfluenceItem[] = CRITERIA.map(([id, text]) => ({ id, text, met: null }));
   if (!price) return { values, labels, confluence: empty, npocs: [], source: NO_PRICE };
@@ -253,11 +253,11 @@ export function computeTechnical(price: PriceData | null, regime: string | null)
     btc_drawdown_pct: pctChange(btcLast.close, btcHigh),
   });
 
-  labels.near_trend = slow === null || fast === null ? "sin datos" : close > slow && close > fast ? "por encima de ambos promedios" : close < slow && close < fast ? "por debajo de ambos promedios" : "entre los promedios";
-  labels.near_weekly_trend = weeklySma === null ? "sin datos" : (weekly.at(-1) as number) > weeklySma ? "por encima del promedio semanal" : "por debajo del promedio semanal";
-  labels.range_zone = position === null ? "sin datos" : position >= 50 ? "premium" : "descuento";
+  labels.near_trend = slow === null || fast === null ? "no data" : close > slow && close > fast ? "above both averages" : close < slow && close < fast ? "below both averages" : "between the averages";
+  labels.near_weekly_trend = weeklySma === null ? "no data" : (weekly.at(-1) as number) > weeklySma ? "above the weekly average" : "below the weekly average";
+  labels.range_zone = position === null ? "no data" : position >= 50 ? "premium" : "discount";
   labels.fib_nearest = String(nearestFib.r);
-  labels.btc_tripwire = reg?.state ?? "sin datos";
+  labels.btc_tripwire = reg?.state ?? "no data";
 
   const met: Record<(typeof CRITERIA)[number][0], boolean | null> = {
     above_slow: slow === null ? null : close > slow,
@@ -267,17 +267,17 @@ export function computeTechnical(price: PriceData | null, regime: string | null)
     npoc_near: lower[0] ? dist(lower[0].level) <= PARAMS.npoc_proximity_pct : false,
     rsi_ok: rsiNow === null ? null : rsiNow < 70,
     rs_positive: values.rs_vs_btc_30d_pp === null ? null : (values.rs_vs_btc_30d_pp as number) >= 0,
-    regime_up: regime === null || regime === "sin datos" ? null : regime === "expansión",
+    regime_up: regime === null || regime === "no data" ? null : regime === "expansion",
   };
   const confluence = CRITERIA.map(([id, text]) => ({ id, text, met: met[id] }));
   const score = confluence.filter((c) => c.met === true).length;
   values.confluence_score = score;
   values.confluence_total = confluence.length;
-  labels.technical_bias = score >= PARAMS.confluence_constructive_min ? "constructivo" : score <= PARAMS.confluence_defensive_max ? "defensivo" : "neutral";
+  labels.technical_bias = score >= PARAMS.confluence_constructive_min ? "constructive" : score <= PARAMS.confluence_defensive_max ? "defensive" : "neutral";
 
   const entry = lower[0]?.level ?? null;
   if (entry === null) {
-    labels.plan_status = "sin nPOC inferior abierto";
+    labels.plan_status = "no open lower nPOC";
   } else {
     const stop = entry * (1 - PARAMS.stop_beyond_npoc_pct / 100);
     const t1 = range.median > entry ? range.median : (upper[0]?.level ?? range.high);
@@ -287,7 +287,7 @@ export function computeTechnical(price: PriceData | null, regime: string | null)
       plan_entry: entry, plan_stop: stop, plan_t1: t1, plan_t2: t2,
       plan_rr: (t1 - entry) / (entry - stop), plan_size_units: risk / (entry - stop), plan_risk_usd: risk,
     });
-    labels.plan_status = "setup disponible";
+    labels.plan_status = "setup available";
   }
   return { values, labels, confluence, npocs: npoc.open, source: price.near.source };
 }
@@ -297,8 +297,8 @@ export type AddMetric = (
 ) => void;
 
 export function registerTechnical(result: TechnicalResult, add: AddMetric, mode: "mock" | "live"): void {
-  const source = result.source === NO_PRICE ? "Datos de precio (no disponibles)" : `Datos de precio · ${result.source}`;
-  const provenance = result.source === NO_PRICE ? undefined : mode === "mock" ? "simulado" : "calculado";
+  const source = result.source === NO_PRICE ? "Price data (not available)" : `Price data · ${result.source}`;
+  const provenance = result.source === NO_PRICE ? undefined : mode === "mock" ? "simulated" : "computed";
   for (const [id, label, unit] of SPEC) {
     add(id, label, result.values[id] ?? null, unit, source, undefined, provenance);
   }

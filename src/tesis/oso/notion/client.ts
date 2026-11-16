@@ -6,7 +6,7 @@ const log = createLogger("oso:notion");
 
 export const NOTION_API = "https://api.notion.com/v1";
 export const PAGE_SIZE = 100;
-/** Presupuesto típico de ráfaga de Notion; mantenerse por debajo de 3 peticiones por segundo. */
+/** Typical Notion burst budget; stay under 3 requests per second. */
 export const MIN_INTERVAL_MS = 350;
 
 const NotionPage = z.looseObject({
@@ -139,7 +139,7 @@ export async function queryDatabase({
       fetchImpl,
     });
     out.push(...batch.results);
-    log.info("página de notion", { databaseId, page, size: batch.results.length, total: out.length });
+    log.info("notion page", { databaseId, page, size: batch.results.length, total: out.length });
     if (!batch.has_more || !batch.next_cursor) break;
     cursor = batch.next_cursor;
     await sleep(MIN_INTERVAL_MS);

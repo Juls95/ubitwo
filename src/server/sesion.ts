@@ -10,7 +10,7 @@ export type Carga = z.infer<typeof Carga>;
 const b64 = (s: string | Buffer) => Buffer.from(s).toString("base64url");
 const firma = (datos: string, secreto: string) => createHmac("sha256", secreto).update(datos).digest("base64url");
 
-/** Token de sesión propio: carga en base64url + HMAC-SHA256. No contiene tokens de Supabase. */
+/** Own session token: base64url payload + HMAC-SHA256. Does not contain Supabase tokens. */
 export function firmarSesion(email: string, secreto: string, ahora = Date.now()): string {
   const datos = b64(JSON.stringify({ email: email.toLowerCase(), exp: Math.floor(ahora / 1000) + DURACION_SESION_S }));
   return `${datos}.${firma(datos, secreto)}`;

@@ -29,7 +29,7 @@ function normalize(row: Record<string, unknown>): Record<string, unknown> {
 
 async function main() {
   const env = loadEnv();
-  if (env.DATA_MODE !== "live") throw new Error("bisonte:fetch solo corre con DATA_MODE=live; usa `pnpm tesis:mock` para datos simulados");
+  if (env.DATA_MODE !== "live") throw new Error("bisonte:fetch only runs with DATA_MODE=live; use `pnpm tesis:mock` for simulated data");
   const { GCP_PROJECT_ID, INTENTS_JWT } = requireEnv(env, ["GCP_PROJECT_ID", "GOOGLE_APPLICATION_CREDENTIALS", "INTENTS_JWT"]);
   const root = dataRoot("live");
   const end = new Date(`${isoDay(new Date())}T00:00:00Z`);
@@ -41,7 +41,7 @@ async function main() {
   const freshStart = isoDay(new Date(end.getTime() - 365 * 86_400_000));
   const fresh = await runGuarded(backend, "freshness", { start_date: freshStart, end_date: window.end_date }, DATE_TYPES, env.BQ_MAX_BYTES);
   const lastBlockDate = z.object({ last_block_date: z.string().nullable() }).parse(fresh.rows[0] ?? { last_block_date: null }).last_block_date;
-  log.info("actualidad", { lastBlockDate });
+  log.info("freshness", { lastBlockDate });
 
   for (const job of BQ_JOBS) {
     const extra = job.extra?.(env.INTENTS_CONTRACT) ?? { params: {}, types: {} };
@@ -76,10 +76,10 @@ async function main() {
     items,
   };
   writeJson(`${root}/raw/manifest.json`, manifest);
-  log.info("terminado", { items: items.length });
+  log.info("finished", { items: items.length });
 }
 
 main().catch((err: unknown) => {
-  log.error("bisonte falló", { error: err instanceof Error ? err.message : String(err) });
+  log.error("bison failed", { error: err instanceof Error ? err.message : String(err) });
   process.exitCode = 1;
 });

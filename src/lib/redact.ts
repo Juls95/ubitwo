@@ -6,10 +6,10 @@ const NOTION_TOKEN = /\b(ntn|secret)_[A-Za-z0-9]{20,}\b/g;
 const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
 const QUERY_KEY = /([?&](?:key|api_key|apikey|token|access_token)=)[^&\s"']+/gi;
 
-export const REDACTED = "[REDACTADO]";
-export const EMAIL_PLACEHOLDER = "[correo]";
+export const REDACTED = "[REDACTED]";
+export const EMAIL_PLACEHOLDER = "[email]";
 
-/** Quita correos de texto que se publica (extractos de Notion): las notas privadas a veces los contienen. */
+/** Strip emails from published text (Notion excerpts): private notes sometimes contain them. */
 export function scrubPii(value: string): string {
   return value.replace(EMAIL, EMAIL_PLACEHOLDER);
 }

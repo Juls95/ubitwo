@@ -38,14 +38,14 @@ export type Tesis = {
   agents: AgentCard[];
 };
 
-/** Validación superficial: falla rápido si el paquete falta o es de una versión incompatible. */
+/** Shallow validation: fail fast if the bundle is missing or from an incompatible version. */
 const Forma = z.looseObject({
   mode: z.enum(["mock", "live"]),
   generated_at: z.string(),
   thesis_md: z.string(),
   charts: z.array(z.looseObject({ id: z.string(), spec: z.record(z.string(), z.unknown()) })),
   agents: z.array(z.looseObject({ id: z.enum(["oso", "bisonte", "toro"]) })).length(3),
-  // El build ya exige https; se revisa otra vez para que un artefacto alterado no cuele otro esquema en un enlace.
+  // The build already requires https; re-check so a tampered artifact cannot sneak another scheme into a link.
   oso: z.looseObject({
     weeks: z.array(z.looseObject({ claims_to_verify: z.array(z.looseObject({ url: HttpsUrl })) })),
     latest_posts: z.array(z.looseObject({ url: HttpsUrl })),
@@ -54,7 +54,7 @@ const Forma = z.looseObject({
 
 export function parsearTesis(json: unknown): Tesis {
   const r = Forma.safeParse(json);
-  if (!r.success) throw new Error(`El paquete de la tesis no es válido: ${r.error.issues[0]?.message ?? "forma desconocida"}`);
+  if (!r.success) throw new Error(`Thesis bundle is invalid: ${r.error.issues[0]?.message ?? "unknown shape"}`);
   return json as Tesis;
 }
 
@@ -63,7 +63,7 @@ let cache: Promise<Tesis> | null = null;
 export function cargarTesis(fetchImpl: typeof fetch = fetch): Promise<Tesis> {
   cache ??= fetchImpl("/data/tesis.json")
     .then(async (res) => {
-      if (!res.ok) throw new Error(`No se pudo cargar la tesis (${res.status}). Ejecuta pnpm build.`);
+      if (!res.ok) throw new Error(`Could not load the thesis (${res.status}). Run pnpm build.`);
       return parsearTesis(await res.json());
     })
     .catch((err: unknown) => {

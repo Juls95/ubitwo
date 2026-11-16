@@ -31,8 +31,8 @@ afterEach(async () => {
   rmSync(dist, { recursive: true, force: true });
 });
 
-describe("servidor", () => {
-  it("responde salud y estado con cabeceras de seguridad", async () => {
+describe("server", () => {
+  it("responds to health and status with security headers", async () => {
     await iniciar();
     const r = await fetch(`${base}/healthz`);
     expect(r.status).toBe(200);
@@ -44,7 +44,7 @@ describe("servidor", () => {
     expect((await fetch(`${base}/readyz`)).status).toBe(200);
   });
 
-  it("sirve resúmenes, tickers, historial, estadísticas y búsqueda", async () => {
+  it("serves digests, tickers, history, statistics, and search", async () => {
     await iniciar();
     const res = (await (await fetch(`${base}/api/resumenes?limite=2`)).json()) as { resumenes: { fecha: string }[] };
     expect(res.resumenes.map((r) => r.fecha)).toEqual(["2026-11-16", "2026-11-15"]);
@@ -55,22 +55,22 @@ describe("servidor", () => {
     const h = (await (await fetch(`${base}/api/tickers/${encodeURIComponent("cripto top100")}`)).json()) as { ticker: string };
     expect(h.ticker).toBe("CRIPTO TOP100");
     expect((await fetch(`${base}/api/estadisticas`)).status).toBe(200);
-    const b = (await (await fetch(`${base}/api/buscar?q=inflación`)).json()) as { resultados: unknown[] };
+    const b = (await (await fetch(`${base}/api/buscar?q=inflation`)).json()) as { resultados: unknown[] };
     expect(b.resultados.length).toBeGreaterThan(0);
   });
 
-  it("valida la entrada y responde errores en español", async () => {
+  it("validates input and returns English error messages", async () => {
     await iniciar();
     const r = await fetch(`${base}/api/resumenes?desde=ayer`);
     expect(r.status).toBe(400);
-    expect(((await r.json()) as { error: string }).error).toMatch(/AAAA-MM-DD/);
+    expect(((await r.json()) as { error: string }).error).toMatch(/YYYY-MM-DD/);
     expect((await fetch(`${base}/api/buscar?q=a`)).status).toBe(400);
     expect((await fetch(`${base}/api/tickers/%3Cscript%3E`)).status).toBe(400);
     expect((await fetch(`${base}/api/no-existe`)).status).toBe(404);
     expect((await fetch(`${base}/api/tickers`, { method: "POST" })).status).toBe(405);
   });
 
-  it("sirve la SPA y nunca sale de dist", async () => {
+  it("serves the SPA and never escapes dist", async () => {
     await iniciar();
     expect(await (await fetch(`${base}/noticias/BTC`)).text()).toContain("ubitwo");
     const asset = await fetch(`${base}/assets/app-abc.js`);

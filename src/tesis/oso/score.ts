@@ -1,8 +1,8 @@
 import type { ExtractedPost, HandleTier, ScoredPost } from "../esquemas/oso";
 
 /**
- * Parámetros de credibilidad prerregistrados. Se publican en la página Metodología y no deben ajustarse
- * después de ver los resultados; cambiarlos requiere una entrada en la bitácora de cambios de TESIS.md.
+ * Preregistered credibility parameters. Published on the Methodology page and must not be tuned
+ * after seeing results; changing them requires a changelog entry in TESIS.md.
  */
 export const SCORING = {
   tier: { official: 0.6, core: 0.55, ecosystem: 0.4, analyst: 0.35 } satisfies Record<HandleTier, number>,
@@ -15,7 +15,7 @@ export const SCORING = {
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
-/** Cuentas independientes que publicaron sobre el mismo tema el mismo día (sin contar al autor). */
+/** Independent accounts that posted about the same topic the same day (excluding the author). */
 function corroborators(post: ExtractedPost, sameDay: readonly ExtractedPost[]): number {
   const handles = new Set<string>();
   for (const other of sameDay) {

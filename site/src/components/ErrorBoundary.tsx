@@ -3,7 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 type Props = { label: string; children: ReactNode };
 type State = { error: Error | null };
 
-/** Aísla cada vista: si una falla, el resto del sitio sigue funcionando y el error se emite como evento `ubitwo:error`. */
+/** Isolates each view: if one fails, the rest of the site keeps working and the error is emitted as a `ubitwo:error` event. */
 export class ErrorBoundary extends Component<Props, State> {
   override state: State = { error: null };
 
@@ -19,7 +19,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <div className="error-box" role="alert">
-          <strong>{this.props.label}: no se pudo mostrar.</strong> <span>{this.state.error.message}</span>
+          <strong>{this.props.label}: could not be displayed.</strong> <span>{this.state.error.message}</span>
         </div>
       );
     }

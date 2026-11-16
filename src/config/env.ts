@@ -54,12 +54,12 @@ const EnvSchema = z.object({
   SUPABASE_URL: optional(z.url()),
   SUPABASE_ANON_KEY: optional(z.string().min(1)),
   SUPABASE_SERVICE_ROLE_KEY: optional(z.string().min(1)),
-  ESPACIO_ID: withDefault(z.string().regex(/^[a-z0-9-]{1,40}$/, "solo minúsculas, números y guiones"), "principal"),
+  ESPACIO_ID: withDefault(z.string().regex(/^[a-z0-9-]{1,40}$/, "lowercase letters, numbers, and hyphens only"), "principal"),
 
-  // Servidor web.
+  // Web server.
   PORT: withDefault(z.coerce.number().int().min(1).max(65535), 3000),
   APP_URL: optional(z.url()),
-  SESSION_SECRET: optional(z.string().min(32, "SESSION_SECRET debe tener al menos 32 caracteres")),
+  SESSION_SECRET: optional(z.string().min(32, "SESSION_SECRET must be at least 32 characters")),
   EMAILS_PERMITIDOS: EmailList,
   LIMITE_PETICIONES_POR_MINUTO: withDefault(z.coerce.number().int().positive(), 120),
 });
@@ -73,17 +73,17 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (source === process.env && existsSync(".env")) process.loadEnvFile(".env");
   const parsed = EnvSchema.safeParse(source);
   if (!parsed.success) {
-    throw new Error(`Variables de entorno inválidas:\n${z.prettifyError(parsed.error)}`);
+    throw new Error(`Invalid environment variables:\n${z.prettifyError(parsed.error)}`);
   }
   if (source === process.env) cached = parsed.data;
   return parsed.data;
 }
 
-/** Falla rápido cuando un comando necesita credenciales que no están configuradas. */
+/** Fail fast when a command needs credentials that are not configured. */
 export function requireEnv<K extends keyof Env>(env: Env, keys: readonly K[]): { [P in K]-?: NonNullable<Env[P]> } {
   const missing = keys.filter((k) => env[k] === undefined || env[k] === "");
   if (missing.length > 0) {
-    throw new Error(`Faltan variables de entorno: ${missing.join(", ")}. Revisa .env.example.`);
+    throw new Error(`Missing environment variables: ${missing.join(", ")}. See .env.example.`);
   }
   return env as unknown as { [P in K]-?: NonNullable<Env[P]> };
 }

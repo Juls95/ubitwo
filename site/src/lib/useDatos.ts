@@ -6,8 +6,8 @@ export type Datos<T> = { datos: T | null; error: ErrorApi | null; cargando: bool
 type Resultado<T> = { clave: string; datos: T | null; error: ErrorApi | null };
 
 /**
- * Carga asíncrona con estado de carga y error tipado. `deps` decide cuándo se vuelve a pedir;
- * una respuesta que llega tarde (de una clave anterior) se ignora.
+ * Async load with typed loading/error state. `deps` decides when to refetch;
+ * a late response from a previous key is ignored.
  */
 export function useDatos<T>(cargar: () => Promise<T>, deps: readonly unknown[] = []): Datos<T> {
   const [vuelta, setVuelta] = useState(0);

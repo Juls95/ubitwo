@@ -26,7 +26,7 @@ export const EnlaceSeguro = z
     } catch {
       return false;
     }
-  }, "se esperaba una URL https");
+  }, "expected an https URL");
 
 export const Evidencia = z.object({
   cuenta: z.string().max(64),

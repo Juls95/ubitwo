@@ -17,7 +17,7 @@ jest.mock("vega-embed", () => ({ __esModule: true, default: jest.fn().mockResolv
 
 const registros = crearDemo(new Date("2026-11-16T12:00:00Z"));
 const [hoy] = registros;
-if (!hoy) throw new Error("la demo debe tener al menos un día");
+if (!hoy) throw new Error("demo must have at least one day");
 
 const estado: Estado = {
   version: "test",
@@ -29,23 +29,23 @@ const estado: Estado = {
 };
 
 const agente = (id: "oso" | "bisonte" | "toro", status: "pass" | "warn" | "fail" = "pass") => ({
-  id, name: id[0]?.toUpperCase() + id.slice(1), role: `rol de ${id}`, does: ["hace algo"], inputs: ["entrada"], outputs: ["salida"],
-  runs: [{ at: "2026-11-09", summary: "corrida", details: { filas: 3 } }],
-  validations: [{ name: "control", status, detail: "detalle" }],
+  id, name: id[0]?.toUpperCase() + id.slice(1), role: `role of ${id}`, does: ["does something"], inputs: ["input"], outputs: ["output"],
+  runs: [{ at: "2026-11-09", summary: "run", details: { rows: 3 } }],
+  validations: [{ name: "check", status, detail: "detail" }],
 });
 
 const tesis: Tesis = {
   mode: "mock",
   generated_at: "2026-11-09T06:00:00.000Z",
-  thesis_md: "# Tesis\n\n## 1. Afirmación\n\nTexto **clave**.",
-  hypothesis_verdict: "respaldada por los datos actuales",
-  regime: "expansión",
-  stance: "constructiva en la dirección; el momento no está confirmado",
+  thesis_md: "# Thesis\n\n## 1. Claim\n\n**Key** text.",
+  hypothesis_verdict: "supported by current data",
+  regime: "expansion",
+  stance: "constructive on direction; timing not confirmed",
   technical_bias: "neutral",
   desk: null,
   metrics: {},
-  charts: [{ id: "daa", title: "Cuentas activas diarias", agent: "bisonte", query_file: "q.sql", endpoint: null, query_sql: "SELECT 1", sentence: "Frase sencilla.", spec: {} }],
-  divergences: [{ week: "2026-W44", from: "2026-10-26", reconstructed: true, sentiment_index: 0.7, sentiment_delta: 0.5, onchain_change_pct: -8, quadrant: "espejismo" }],
+  charts: [{ id: "daa", title: "Daily active accounts", agent: "bisonte", query_file: "q.sql", endpoint: null, query_sql: "SELECT 1", sentence: "Plain sentence.", spec: {} }],
+  divergences: [{ week: "2026-W44", from: "2026-10-26", reconstructed: true, sentiment_index: 0.7, sentiment_delta: 0.5, onchain_change_pct: -8, quadrant: "mirage" }],
   spikes: [],
   oso: { weeks: [], latest_posts: [], discard_reasons: { not_in_citations: 2 }, notion: null },
   agents: [agente("oso", "warn"), agente("bisonte"), agente("toro")],
@@ -53,12 +53,12 @@ const tesis: Tesis = {
 
 type Respuestas = Record<string, { status?: number; body: unknown }>;
 
-/** jsdom no trae fetch: este falso responde por prefijo de ruta y registra cada llamada. */
+/** jsdom has no fetch: this stub responds by path prefix and records each call. */
 function fetchFalso(respuestas: Respuestas) {
   return jest.fn(async (entrada: RequestInfo | URL, _init?: RequestInit) => {
     const ruta = String(entrada);
     const clave = Object.keys(respuestas).filter((k) => ruta.startsWith(k)).sort((a, b) => b.length - a.length)[0];
-    const r = clave ? respuestas[clave] : { status: 404, body: { error: "Ruta no encontrada" } };
+    const r = clave ? respuestas[clave] : { status: 404, body: { error: "Route not found" } };
     const status = r?.status ?? 200;
     return { ok: status >= 200 && status < 300, status, json: async () => r?.body } as Response;
   });
@@ -81,43 +81,43 @@ beforeEach(() => {
   window.scrollTo = jest.fn();
 });
 
-describe("cliente de la API", () => {
-  it("valida la respuesta con zod y explica los errores en español", async () => {
+describe("API client", () => {
+  it("validates the response with zod and explains errors in English", async () => {
     await expect(api.estado()).resolves.toMatchObject({ demo: true });
     global.fetch = fetchFalso({ "/api/estado": { body: { version: 1 } } });
-    await expect(api.estado()).rejects.toThrow(/Respuesta inesperada/);
-    global.fetch = fetchFalso({ "/api/tickers": { status: 401, body: { error: "Inicia sesión para ver los datos" } } });
-    await expect(api.tickers()).rejects.toMatchObject({ status: 401, message: "Inicia sesión para ver los datos" });
+    await expect(api.estado()).rejects.toThrow(/Unexpected response/);
+    global.fetch = fetchFalso({ "/api/tickers": { status: 401, body: { error: "Sign in to view the data" } } });
+    await expect(api.tickers()).rejects.toMatchObject({ status: 401, message: "Sign in to view the data" });
   });
 
-  it("convierte un fallo de red en un ErrorApi con estado 0", async () => {
+  it("turns a network failure into an ErrorApi with status 0", async () => {
     const caido = jest.fn(async () => {
       throw new TypeError("Failed to fetch");
     });
-    await expect(pedir("/api/estado", EsquemaEstado, { fetchImpl: caido })).rejects.toMatchObject({ status: 0, message: expect.stringMatching(/No hay conexión/) });
+    await expect(pedir("/api/estado", EsquemaEstado, { fetchImpl: caido })).rejects.toMatchObject({ status: 0, message: expect.stringMatching(/No connection/) });
   });
 });
 
-describe("tesis y utilidades", () => {
-  it("rechaza un paquete con enlaces que no son https", () => {
+describe("thesis and utilities", () => {
+  it("rejects a bundle with non-https links", () => {
     expect(() => parsearTesis(tesis)).not.toThrow();
     const malo = { ...tesis, oso: { ...tesis.oso, latest_posts: [{ url: "javascript:alert(1)" }] } };
-    expect(() => parsearTesis(malo)).toThrow(/no es válido/);
+    expect(() => parsearTesis(malo)).toThrow(/invalid/);
   });
 
-  it("safeHref solo deja pasar https", () => {
+  it("safeHref only allows https", () => {
     expect(safeHref("https://x.com/a")).toBe("https://x.com/a");
     expect(safeHref("javascript:alert(1)")).toBeUndefined();
     expect(safeHref("http://x.com")).toBeUndefined();
   });
 
-  it("Markdown nunca interpreta HTML", () => {
-    const { container } = render(<Markdown source={"# Título\n\n<img src=x onerror=alert(1)>"} />);
+  it("Markdown never interprets HTML", () => {
+    const { container } = render(<Markdown source={"# Title\n\n<img src=x onerror=alert(1)>"} />);
     expect(container.querySelector("img")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Título" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Title" })).toBeInTheDocument();
   });
 
-  it("filtra activos por postura y tipo", () => {
+  it("filters assets by stance and type", () => {
     const todos = filtrarActivos(hoy, { postura: "todas", tipo: "todos" });
     const cripto = filtrarActivos(hoy, { postura: "todas", tipo: "cripto" });
     expect(cripto.length).toBeGreaterThan(0);
@@ -125,44 +125,46 @@ describe("tesis y utilidades", () => {
     expect(todos.length).toBe(hoy.resumen.activos.length);
   });
 
-  it("lista las conexiones pendientes sin exponer valores", () => {
+  it("lists pending connections without exposing values", () => {
     const pasos = pasosDeConexion(estado);
     expect(pasos.map((p) => p.id)).toEqual(["supabase", "notion", "acceso", "app_url", "ia"]);
     expect(pasos.every((p) => !p.listo)).toBe(true);
   });
 
-  it("solo reconoce el token del enlace mágico en /acceso", () => {
+  it("only recognizes the magic-link token on /acceso or /login", () => {
     window.history.replaceState(null, "", "/#access_token=abc");
     expect(tokenEnLaUrl()).toBeNull();
     window.history.replaceState(null, "", "/acceso#access_token=abc&type=magiclink");
     expect(tokenEnLaUrl()).toBe("abc");
+    window.history.replaceState(null, "", "/login#access_token=xyz&type=magiclink");
+    expect(tokenEnLaUrl()).toBe("xyz");
   });
 });
 
-describe("componentes", () => {
-  it("la insignia de postura es estable", () => {
+describe("components", () => {
+  it("stance badge is stable", () => {
     const { container } = render(<InsigniaPostura postura="alcista" />);
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("la barra de acuerdo describe el reparto en texto", () => {
+  it("agreement bar describes the split in text", () => {
     render(<BarraAcuerdo alcista={3} neutral={1} bajista={0} />);
-    expect(screen.getByRole("img", { name: "3 alcistas, 1 neutrales, 0 bajistas" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "3 bullish, 1 neutral, 0 bearish" })).toBeInTheDocument();
   });
 
-  it("la tarjeta de un activo muestra evidencias al pedirlas y enlaza solo https", () => {
+  it("asset card shows evidence on demand and links only https", () => {
     const activo = hoy.resumen.activos.find((a) => a.evidencias.length > 0);
-    if (!activo) throw new Error("la demo debe tener evidencias");
+    if (!activo) throw new Error("demo must have evidence");
     render(<TarjetaActivo activo={activo} />);
     expect(screen.getByRole("link", { name: activo.ticker })).toHaveAttribute("href", `#/tickers/${encodeURIComponent(activo.ticker)}`);
-    fireEvent.click(screen.getByRole("button", { name: /Ver \d+ evidencia/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Show \d+ evidence/ }));
     for (const a of screen.getAllByRole("link").filter((l) => l.getAttribute("target") === "_blank")) {
       expect(a.getAttribute("href")).toMatch(/^https:/);
       expect(a).toHaveAttribute("rel", "noreferrer noopener");
     }
   });
 
-  it("ErrorBoundary aísla una vista que falla y emite ubitwo:error", () => {
+  it("ErrorBoundary isolates a failing view and emits ubitwo:error", () => {
     const escucha = jest.fn();
     window.addEventListener("ubitwo:error", escucha);
     const Falla = () => {
@@ -170,97 +172,97 @@ describe("componentes", () => {
     };
     jest.spyOn(console, "error").mockImplementation(() => undefined);
     render(
-      <ErrorBoundary label="Gráfica">
+      <ErrorBoundary label="Chart">
         <Falla />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole("alert")).toHaveTextContent("Gráfica: no se pudo mostrar.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Chart: could not be displayed.");
     expect(escucha).toHaveBeenCalled();
     window.removeEventListener("ubitwo:error", escucha);
   });
 
-  it("el aviso de demostración solo aparece con datos ficticios", () => {
+  it("demo banner only appears with fictional data", () => {
     const { rerender } = render(<BannerDemo estado={estado} />);
-    expect(screen.getByRole("status")).toHaveTextContent(/DATOS DE DEMOSTRACIÓN/);
+    expect(screen.getByRole("status")).toHaveTextContent(/DEMO DATA/);
     rerender(<BannerDemo estado={{ ...estado, demo: false, fuente: "supabase" }} />);
     expect(screen.queryByRole("status")).toBeNull();
   });
 });
 
-describe("páginas", () => {
+describe("pages", () => {
   const props = { estado, sesion: null, alCambiarSesion: () => undefined };
 
-  it("inicio: muestra el sesgo del día y lleva a las noticias", async () => {
+  it("home: shows the day's bias and links to news", async () => {
     render(<App />);
-    expect(await screen.findByRole("heading", { level: 1, name: /ágora/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver las noticias de hoy" })).toHaveAttribute("href", "#/noticias");
+    expect(await screen.findByRole("heading", { level: 1, name: /agora/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "See today's news" })).toHaveAttribute("href", "#/news");
     await waitFor(() => expect(screen.getByText(hoy.resumen.contexto)).toBeInTheDocument());
   });
 
-  it("noticias: cambia de día con las pestañas y busca", async () => {
-    global.fetch = fetchFalso({ ...base, "/api/buscar": { body: { consulta: "btc", resultados: [{ fecha: "2026-11-16", ticker: "BTC", texto: "BTC rompe máximos", url: "https://example.com/x", cuenta: "@demo_mercados" }] } } });
-    render(<Pagina ruta="/noticias" {...props} />);
+  it("news: switches days with tabs and searches", async () => {
+    global.fetch = fetchFalso({ ...base, "/api/buscar": { body: { consulta: "btc", resultados: [{ fecha: "2026-11-16", ticker: "BTC", texto: "BTC breaks highs", url: "https://example.com/x", cuenta: "@demo_mercados" }] } } });
+    render(<Pagina ruta="/news" {...props} />);
     const pestanas = await screen.findAllByRole("tab");
     expect(pestanas).toHaveLength(registros.length);
     expect(pestanas[0]).toHaveAttribute("aria-selected", "true");
     const segundo = pestanas[1];
-    if (!segundo) throw new Error("se esperaban dos días");
+    if (!segundo) throw new Error("expected two days");
     fireEvent.click(segundo);
     expect(segundo).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { level: 2, name: registros[1]?.resumen.titulo })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Buscar" }), { target: { value: "btc" } });
-    fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
-    expect(await screen.findByText("BTC rompe máximos")).toHaveAttribute("href", "https://example.com/x");
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search" }), { target: { value: "btc" } });
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(await screen.findByText("BTC breaks highs")).toHaveAttribute("href", "https://example.com/x");
   });
 
-  it("noticias: si falta sesión, invita a entrar", async () => {
-    global.fetch = fetchFalso({ ...base, "/api/resumenes": { status: 401, body: { error: "Inicia sesión para ver los datos" } } });
-    render(<Pagina ruta="/noticias" {...props} />);
-    expect(await screen.findByText("Necesitas iniciar sesión.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Entrar" })).toHaveAttribute("href", "#/acceso");
+  it("news: if session is missing, invites to sign in", async () => {
+    global.fetch = fetchFalso({ ...base, "/api/resumenes": { status: 401, body: { error: "Sign in to view the data" } } });
+    render(<Pagina ruta="/news" {...props} />);
+    expect(await screen.findByText("You need to sign in.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "#/login");
   });
 
-  it("tesis: muestra el veredicto y los agentes con su expediente", async () => {
-    const { unmount } = render(<Pagina ruta="/tesis" {...props} />);
-    expect(await screen.findByText("respaldada por los datos actuales")).toBeInTheDocument();
-    expect(screen.getByText(/Tesis con datos simulados/)).toBeInTheDocument();
+  it("thesis: shows the verdict and agents with their dossiers", async () => {
+    const { unmount } = render(<Pagina ruta="/thesis" {...props} />);
+    expect(await screen.findByText("supported by current data")).toBeInTheDocument();
+    expect(screen.getByText(/Thesis with simulated data/)).toBeInTheDocument();
     unmount();
-    render(<Pagina ruta="/tesis/agentes" {...props} />);
-    expect(await screen.findByRole("link", { name: "Expediente de Oso →" })).toHaveAttribute("href", "#/tesis/agentes/oso");
-    expect(screen.getByText("espejismo")).toBeInTheDocument();
+    render(<Pagina ruta="/thesis/agents" {...props} />);
+    expect(await screen.findByRole("link", { name: "Bear's dossier →" })).toHaveAttribute("href", "#/thesis/agents/oso");
+    expect(screen.getByText("mirage")).toBeInTheDocument();
   });
 
-  it("estado: lista lo que falta conectar", () => {
-    render(<Pagina ruta="/estado" {...props} />);
-    expect(screen.getByText(/0 de 5 conexiones listas/)).toBeInTheDocument();
-    expect(screen.getByText("Base de datos (Supabase)")).toBeInTheDocument();
+  it("status: lists what still needs connecting", () => {
+    render(<Pagina ruta="/status" {...props} />);
+    expect(screen.getByText(/0 of 5 connections ready/)).toBeInTheDocument();
+    expect(screen.getByText("Database (Supabase)")).toBeInTheDocument();
   });
 
-  it("acceso: explica cuando el correo aún no está configurado", () => {
-    render(<Pagina ruta="/acceso" {...props} sesion={{ politica: "abierto-local", usuario: null, acceso_configurado: false }} />);
-    expect(screen.getByText(/todavía no está configurado/)).toBeInTheDocument();
+  it("login: explains when email is not configured yet", () => {
+    render(<Pagina ruta="/login" {...props} sesion={{ politica: "abierto-local", usuario: null, acceso_configurado: false }} />);
+    expect(screen.getByText(/not configured on this server yet/)).toBeInTheDocument();
   });
 
-  it("acceso: canjea el token del enlace y lo borra de la URL", async () => {
+  it("login: redeems the link token and clears it from the URL", async () => {
     window.history.replaceState(null, "", "/acceso#access_token=tok123&type=magiclink");
-    const f = fetchFalso({ ...base, "/api/sesion/verificar": { body: { ok: true, usuario: "yo@example.com" } } });
+    const f = fetchFalso({ ...base, "/api/sesion/verificar": { body: { ok: true, usuario: "me@example.com" } } });
     global.fetch = f;
     const alCambiar = jest.fn();
-    render(<Pagina ruta="/acceso" {...props} alCambiarSesion={alCambiar} />);
+    render(<Pagina ruta="/login" {...props} alCambiarSesion={alCambiar} />);
     await waitFor(() => expect(alCambiar).toHaveBeenCalled());
     const llamada = f.mock.calls.find(([r]) => String(r) === "/api/sesion/verificar");
     expect(JSON.parse(String((llamada?.[1] as RequestInit).body))).toEqual({ access_token: "tok123" });
     expect(window.location.href).not.toContain("tok123");
-    expect(window.location.hash).toBe("#/noticias");
+    expect(window.location.hash).toBe("#/news");
   });
 
-  it("preguntar: un error del servidor se muestra sin romper la página", async () => {
-    global.fetch = fetchFalso({ ...base, "/api/preguntar": { status: 500, body: { error: "Error interno. Revisa los logs del servidor." } } });
-    render(<Pagina ruta="/preguntar" {...props} />);
-    fireEvent.change(screen.getByLabelText("Tu pregunta"), { target: { value: "¿Qué pasó con BTC?" } });
-    fireEvent.click(screen.getByRole("button", { name: "Preguntar" }));
-    expect(await screen.findByText(/Error interno/)).toBeInTheDocument();
+  it("ask: a server error is shown without breaking the page", async () => {
+    global.fetch = fetchFalso({ ...base, "/api/preguntar": { status: 500, body: { error: "Internal error. Check the server logs." } } });
+    render(<Pagina ruta="/ask" {...props} />);
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "What happened with BTC?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask" }));
+    expect(await screen.findByText(/Internal error/)).toBeInTheDocument();
     expect(ErrorApi).toBeDefined();
   });
 });

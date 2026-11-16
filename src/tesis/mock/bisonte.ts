@@ -2,9 +2,9 @@ import { addDays, daysBetween, parseDay } from "../../lib/dates";
 import type { Rng } from "./prng";
 
 /**
- * Escenario sintético en el mejor caso (SIMULADO, no son datos de NEAR):
- * el volumen de 1Click crece más rápido que la actividad base y se adelanta ~7 días a las cuentas activas diarias;
- * un pico tipo airdrop concentrado en pocos firmantes ejercita el clasificador «pico frente a cambio estructural».
+ * Best-case synthetic scenario (SIMULATED, not NEAR data):
+ * 1Click volume grows faster than base activity and leads daily active accounts by ~7 days;
+ * a concentrated airdrop-style spike among few signers exercises the "spike vs structural change" classifier.
  */
 export function mockBisonte(rng: Rng, end: string, bqDays: number, intentsDays: number) {
   const start = addDays(end, -bqDays);

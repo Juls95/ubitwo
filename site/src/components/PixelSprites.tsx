@@ -1,4 +1,4 @@
-/** Sprites originales de 16×16. Se escalan con image-rendering: pixelated. */
+/** Original 16×16 sprites. Scaled with image-rendering: pixelated. */
 function Px({ d, fill }: { d: string; fill: string }) {
   return <path d={d} fill={fill} />;
 }

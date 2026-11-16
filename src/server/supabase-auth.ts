@@ -2,15 +2,15 @@ import { z } from "zod";
 import { requestJson } from "../lib/http";
 
 export type ClienteAuth = {
-  /** Envía el correo con el enlace mágico. `crearUsuario` solo es true para correos de la lista permitida. */
+  /** Sends the magic-link email. `crearUsuario` is true only for allowlisted emails. */
   enviarEnlace(email: string, redirigirA: string, crearUsuario: boolean): Promise<void>;
-  /** Valida un access token de Supabase y devuelve el correo del usuario. */
+  /** Validates a Supabase access token and returns the user's email. */
   usuario(accessToken: string): Promise<{ email: string }>;
 };
 
 const Usuario = z.looseObject({ email: z.email() });
 
-/** Supabase Auth por REST con la clave anon (pública). La service role nunca se usa aquí. */
+/** Supabase Auth over REST with the anon (public) key. The service role is never used here. */
 export function crearClienteAuth(url: string, anonKey: string, fetchImpl?: typeof fetch): ClienteAuth {
   const base = `${url.replace(/\/$/, "")}/auth/v1`;
   return {

@@ -3,7 +3,7 @@ import type { PriceBar } from "../esquemas/mercado";
 import { DESK_ANCHORS } from "./desk";
 import { createRng, type Rng } from "./prng";
 
-/** Extracción normal de Box-Muller con el generador con semilla, para que la simulación sea idéntica en cada ejecución. */
+/** Box-Muller normal draw with the seeded generator so the simulation is identical every run. */
 function gauss(rng: Rng): number {
   const u = Math.max(rng.next(), 1e-12);
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng.next());
@@ -11,7 +11,7 @@ function gauss(rng: Rng): number {
 
 const round = (n: number, d: number) => Math.round(n * 10 ** d) / 10 ** d;
 
-/** Ancla una serie de cierres a precios citados: el residuo logarítmico se interpola linealmente entre anclas y se mantiene constante fuera de ellas. */
+/** Pin a close series to cited prices: the log residual is linearly interpolated between anchors and held constant outside them. */
 function pin(closes: readonly number[], pins: readonly { index: number; target: number }[]): number[] {
   const res = pins.map((p) => ({ index: p.index, r: Math.log(p.target / (closes[p.index] as number)) }));
   return closes.map((c, i) => {
@@ -33,22 +33,22 @@ function pin(closes: readonly number[], pins: readonly { index: number; target: 
 export type PriceScenario = { drift: number; lateDrift: number; reversion: number; idioReversion: number; shocks: [number, number][]; recoveryDrift: number };
 
 /**
- * Velas diarias con semilla para BTC y NEAR. NEAR sigue a BTC con una beta diseñada más ruido idiosincrático y algunas
- * velas rápidas dominadas por el cuerpo (dejan marcas nPOC). Los cierres se anclan a precios citados en las notas de Notion
- * del autor (dos por símbolo); todo lo demás es simulado, y las series lo dicen en `source`.
+ * Seeded daily candles for BTC and NEAR. NEAR follows BTC with a designed beta plus idiosyncratic noise and some
+ * fast body-dominated candles (they leave nPOC marks). Closes are pinned to prices cited in the author's Notion
+ * notes (two per symbol); everything else is simulated, and the series say so in `source`.
  */
 export function mockPrice(seed: number, endExclusive: string, days: number, generatedAt: string, sc: PriceScenario = SCENARIO) {
   const rng = createRng(seed);
   const dates = Array.from({ length: days }, (_, i) => addDays(endExclusive, -(days - i)));
   const idx = (date: string) => {
     const i = dates.indexOf(date);
-    if (i < 0) throw new Error(`La fecha ancla ${date} está fuera de la ventana de precios simulada`);
+    if (i < 0) throw new Error(`Anchor date ${date} is outside the simulated price window`);
     return i;
   };
   const shocks = new Map<number, number>(sc.shocks.map(([back, v]) => [days - back, v]));
   const btcRaw: number[] = [];
   const nearRaw: number[] = [];
-  // Precios logarítmicos con reversión a la media: BTC deriva dentro de un rango amplio y NEAR es una copia apalancada más su propio ruido con reversión a la media.
+  // Log prices with mean reversion: BTC drifts inside a wide range and NEAR is a leveraged copy plus its own mean-reverting noise.
   const muB = Math.log(76_000);
   let b = muB;
   let z = 0;
@@ -81,14 +81,14 @@ export function mockPrice(seed: number, endExclusive: string, days: number, gene
     });
 
   const common = { mode: "mock" as const, generated_at: generatedAt };
-  const source = "velas simuladas (con semilla); dos cierres anclados a marcas de precio de Notion";
+  const source = "simulated candles (seeded); two closes pinned to Notion price prints";
   return {
     near: { ...common, symbol: "NEAR" as const, source, bars: candles(nearClose, new Set(shocks.keys()), 4) },
     btc: { ...common, symbol: "BTC" as const, source, bars: candles(btcClose, new Set<number>(), 2) },
   };
 }
 
-/** Días hacia atrás desde el final (exclusivo) en los que NEAR recibe una vela rápida; elegidos para que la muestra deje marcas nPOC. */
+/** Days back from the exclusive end where NEAR gets a fast candle; chosen so the sample leaves nPOC marks. */
 export const SCENARIO: PriceScenario = {
   drift: 0,
   lateDrift: -0.0007,

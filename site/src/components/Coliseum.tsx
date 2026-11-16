@@ -1,4 +1,4 @@
-/** Dibujo original del anfiteatro (no copiado de ninguna página de terceros). */
+/** Original amphitheater drawing (not copied from any third-party page). */
 export function Coliseum() {
   const far = Array.from({ length: 13 }, (_, i) => {
     const t = i / 12;

@@ -7,10 +7,10 @@ const API = `http://127.0.0.1:${process.env.PORT ?? "3000"}`;
 
 export default defineConfig({
   root: "site",
-  // Rutas absolutas: el servidor también sirve la SPA en /acceso (retorno del enlace mágico).
+  // Absolute paths: the server also serves the SPA at /login (magic-link return).
   base: "/",
   plugins: [react()],
-  // `pnpm dev` levanta Vite y reenvía la API al servidor de `pnpm dev:server`.
+  // `pnpm dev` starts Vite and proxies the API to the `pnpm dev:server` process.
   server: { proxy: { "/api": API, "/healthz": API, "/readyz": API } },
   preview: { headers: SECURITY_HEADERS, proxy: { "/api": API } },
   build: {

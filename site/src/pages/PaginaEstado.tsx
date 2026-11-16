@@ -3,20 +3,20 @@ import type { Estado, Sesion } from "../lib/api";
 type Paso = { id: string; titulo: string; listo: boolean; para: string; como: string };
 
 const POLITICA: Record<Sesion["politica"], string> = {
-  abierto: "Abierto: cualquiera con el enlace puede ver el panel.",
-  "abierto-local": "Abierto solo porque corre en tu computadora. Publicado, pedirá iniciar sesión.",
-  sesion: "Privado: solo entran los correos autorizados.",
-  bloqueado: "Bloqueado: falta configurar el acceso, así que nadie puede ver los datos.",
+  abierto: "Open: anyone with the link can see the desk.",
+  "abierto-local": "Open only because it is running on your machine. When published, it will require sign-in.",
+  sesion: "Private: only authorized emails can enter.",
+  bloqueado: "Blocked: access is not configured, so nobody can see the data.",
 };
 
 export function pasosDeConexion(estado: Estado): Paso[] {
   const c = estado.conexiones ?? { supabase: false, acceso: false, notion: estado.notion, ia: estado.ia.disponible, app_url: false };
   return [
-    { id: "supabase", titulo: "Base de datos (Supabase)", listo: c.supabase, para: "Guardar los resúmenes y compartirlos entre el servidor y la sincronización.", como: "SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y aplica supabase/migrations/0001_noticias.sql." },
-    { id: "notion", titulo: "Noticias (Notion)", listo: c.notion, para: "Traer el resumen diario que escribe el bot.", como: "NOTION_TOKEN y NOTION_DB_RESUMENES; comparte la base con tu integración de Notion." },
-    { id: "acceso", titulo: "Inicio de sesión", listo: c.acceso, para: "Que solo tú (y quien autorices) vea el panel publicado.", como: "SUPABASE_ANON_KEY, SESSION_SECRET (32+ caracteres) y EMAILS_PERMITIDOS." },
-    { id: "app_url", titulo: "Dirección pública", listo: c.app_url, para: "Que el enlace mágico regrese a tu sitio.", como: "APP_URL con la URL de Render, también en Supabase → Auth → URL Configuration." },
-    { id: "ia", titulo: "IA (Gemini)", listo: c.ia, para: "Respuestas redactadas en «Pregunta». Sin IA, ubitwo responde con fragmentos.", como: "GEMINI_API_KEY y LLM_MODEL (cambiar de modelo es cambiar esa variable)." },
+    { id: "supabase", titulo: "Database (Supabase)", listo: c.supabase, para: "Store digests and share them between the server and sync.", como: "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, and apply supabase/migrations/0001_noticias.sql." },
+    { id: "notion", titulo: "News (Notion)", listo: c.notion, para: "Pull the daily digest the bot writes.", como: "NOTION_TOKEN and NOTION_DB_RESUMENES; share the database with your Notion integration." },
+    { id: "acceso", titulo: "Sign-in", listo: c.acceso, para: "So only you (and whoever you authorize) can see the published desk.", como: "SUPABASE_ANON_KEY, SESSION_SECRET (32+ characters), and EMAILS_PERMITIDOS." },
+    { id: "app_url", titulo: "Public URL", listo: c.app_url, para: "So the magic link returns to your site.", como: "APP_URL with the Render URL, also in Supabase → Auth → URL Configuration." },
+    { id: "ia", titulo: "AI (Gemini)", listo: c.ia, para: "Written answers on Ask. Without AI, ubitwo replies with fragments.", como: "GEMINI_API_KEY and LLM_MODEL (changing the model means changing that variable)." },
   ];
 }
 
@@ -24,8 +24,8 @@ export function PaginaEstado({ estado, sesion }: { estado: Estado | null; sesion
   if (!estado) {
     return (
       <section className="page">
-        <h1>Estado</h1>
-        <div className="error-box" role="alert">No hay conexión con el servidor. Si estás en tu computadora, ejecuta <code>pnpm dev</code> o <code>pnpm start</code>.</div>
+        <h1>Status</h1>
+        <div className="error-box" role="alert">No connection to the server. If you are on your machine, run <code>pnpm dev</code> or <code>pnpm start</code>.</div>
       </section>
     );
   }
@@ -34,32 +34,32 @@ export function PaginaEstado({ estado, sesion }: { estado: Estado | null; sesion
   return (
     <section className="page">
       <header className="page-head">
-        <span className="eyebrow">Estado</span>
-        <h1>Qué está conectado</h1>
-        <p>{listos === pasos.length ? "Todo listo." : `${listos} de ${pasos.length} conexiones listas. ubitwo funciona igual con lo que falte: usa datos de demostración o responde sin IA.`}</p>
+        <span className="eyebrow">Status</span>
+        <h1>What is connected</h1>
+        <p>{listos === pasos.length ? "All set." : `${listos} of ${pasos.length} connections ready. ubitwo still works with what is missing: it uses demo data or answers without AI.`}</p>
       </header>
 
       <div className="stat-row">
-        <div className="stat"><span>Fuente de noticias</span><strong>{estado.fuente === "demo" ? "demostración" : estado.fuente}</strong></div>
-        <div className="stat"><span>Versión</span><strong>{estado.version}</strong></div>
-        <div className="stat"><span>IA</span><strong>{estado.ia.disponible ? estado.ia.proveedor : "sin IA"}</strong></div>
+        <div className="stat"><span>News source</span><strong>{estado.fuente === "demo" ? "demo" : estado.fuente}</strong></div>
+        <div className="stat"><span>Version</span><strong>{estado.version}</strong></div>
+        <div className="stat"><span>AI</span><strong>{estado.ia.disponible ? estado.ia.proveedor : "no AI"}</strong></div>
       </div>
 
-      {sesion ? <p className="aviso">{POLITICA[sesion.politica]}{sesion.usuario ? ` Sesión: ${sesion.usuario}.` : ""}</p> : null}
+      {sesion ? <p className="aviso">{POLITICA[sesion.politica]}{sesion.usuario ? ` Signed in as ${sesion.usuario}.` : ""}</p> : null}
 
       <ol className="checklist">
         {pasos.map((p) => (
           <li key={p.id} className={p.listo ? "listo" : "falta"}>
             <span className="check" aria-hidden="true">{p.listo ? "✓" : "○"}</span>
             <div>
-              <strong>{p.titulo}</strong> <span className="muted">{p.listo ? "· conectado" : "· falta"}</span>
+              <strong>{p.titulo}</strong> <span className="muted">{p.listo ? "· connected" : "· missing"}</span>
               <p>{p.para}</p>
-              {!p.listo ? <p className="muted">Configura: {p.como}</p> : null}
+              {!p.listo ? <p className="muted">Configure: {p.como}</p> : null}
             </div>
           </li>
         ))}
       </ol>
-      <p className="muted">La guía paso a paso está en <code>docs/conectar-render-notion-supabase.md</code>. Esta página solo muestra si algo está configurado; nunca muestra valores.</p>
+      <p className="muted">The step-by-step guide is in <code>docs/conectar-render-notion-supabase.md</code>. This page only shows whether something is configured; it never shows values.</p>
     </section>
   );
 }

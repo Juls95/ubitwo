@@ -3,7 +3,7 @@ import { api, ErrorApi, type Estado, type Respuesta } from "../lib/api";
 import { formatoFechaCorta } from "../lib/formato";
 import { CajaError } from "../components/Comunes";
 
-const EJEMPLOS = ["¿Qué se dijo de BTC esta semana?", "¿Qué activos tuvieron más desacuerdo?", "Resume el sentimiento de los últimos días"];
+const EJEMPLOS = ["What was said about BTC this week?", "Which assets had the most disagreement?", "Summarize sentiment over the last few days"];
 
 export function PaginaPreguntar({ estado }: { estado: Estado | null }) {
   const [pregunta, setPregunta] = useState("");
@@ -30,16 +30,16 @@ export function PaginaPreguntar({ estado }: { estado: Estado | null }) {
   return (
     <section className="page preguntar">
       <header className="page-head">
-        <span className="eyebrow">Pregunta</span>
-        <h1>Pregúntale a ubitwo</h1>
-        <p>Responde solo con los resúmenes guardados y te dice qué días usó. {estado && !estado.ia.disponible ? "Ahora mismo no hay IA configurada: verás los fragmentos más relevantes." : null}</p>
+        <span className="eyebrow">Ask</span>
+        <h1>Ask ubitwo</h1>
+        <p>It answers only from saved digests and tells you which days it used. {estado && !estado.ia.disponible ? "No AI is configured right now: you will see the most relevant fragments." : null}</p>
       </header>
       <form className="formulario" onSubmit={alEnviar}>
-        <label htmlFor="pregunta">Tu pregunta</label>
-        <textarea id="pregunta" name="pregunta" rows={3} required minLength={3} maxLength={500} value={pregunta} onChange={(e) => setPregunta(e.target.value)} placeholder="Ej. ¿Qué se dijo de ETH esta semana?" />
+        <label htmlFor="pregunta">Your question</label>
+        <textarea id="pregunta" name="pregunta" rows={3} required minLength={3} maxLength={500} value={pregunta} onChange={(e) => setPregunta(e.target.value)} placeholder="e.g. What was said about ETH this week?" />
         <div className="comment-form-row">
           <span className="muted">{pregunta.length}/500</span>
-          <button type="submit" className="cta" disabled={pensando || pregunta.trim().length < 3}>{pensando ? "Pensando…" : "Preguntar"}</button>
+          <button type="submit" className="cta" disabled={pensando || pregunta.trim().length < 3}>{pensando ? "Thinking…" : "Ask"}</button>
         </div>
       </form>
       <div className="ejemplos">
@@ -50,15 +50,15 @@ export function PaginaPreguntar({ estado }: { estado: Estado | null }) {
       {error ? <CajaError error={error} /> : null}
       {respuesta ? (
         <article className="respuesta" aria-live="polite">
-          <p className="eyebrow">{respuesta.modo === "ia" ? `Respuesta (${respuesta.proveedor ?? "IA"})` : "Fragmentos relevantes (sin IA)"}</p>
+          <p className="eyebrow">{respuesta.modo === "ia" ? `Answer (${respuesta.proveedor ?? "AI"})` : "Relevant fragments (no AI)"}</p>
           {respuesta.respuesta.split(/\n{2,}/).map((p, i) => <p key={i}>{p}</p>)}
           {respuesta.fuentes.length > 0 ? (
             <p className="muted">
-              Fuentes:{" "}
+              Sources:{" "}
               {respuesta.fuentes.map((f, i) => (
                 <span key={`${f.fecha}-${f.ticker}-${i}`}>
                   {i > 0 ? " · " : null}
-                  {f.ticker ? <a href={`#/tickers/${encodeURIComponent(f.ticker)}`}>{f.ticker}</a> : "contexto"} {formatoFechaCorta(f.fecha)}
+                  {f.ticker ? <a href={`#/tickers/${encodeURIComponent(f.ticker)}`}>{f.ticker}</a> : "context"} {formatoFechaCorta(f.fecha)}
                 </span>
               ))}
             </p>

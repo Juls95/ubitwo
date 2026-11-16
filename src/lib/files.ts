@@ -13,9 +13,9 @@ export function writeText(path: string, text: string): void {
 }
 
 export function readJson<T>(path: string, schema: z.ZodType<T>): T {
-  if (!existsSync(path)) throw new Error(`Falta el artefacto: ${path}`);
+  if (!existsSync(path)) throw new Error(`Missing artifact: ${path}`);
   const parsed = schema.safeParse(JSON.parse(readFileSync(path, "utf8")));
-  if (!parsed.success) throw new Error(`El artefacto ${path} no pasó la validación: ${parsed.error.message}`);
+  if (!parsed.success) throw new Error(`Artifact ${path} failed validation: ${parsed.error.message}`);
   return parsed.data;
 }
 

@@ -40,7 +40,7 @@ export function repositorioMemoria(inicial: RegistroResumen[], tipo: TipoReposit
     listar: async (c) => filtrar([...datos.values()], c),
     obtener: async (fecha) => datos.get(fecha) ?? null,
     guardar: async (r) => void datos.set(r.fecha, RegistroResumen.parse(r)),
-    salud: async () => ({ ok: true, detalle: tipo === "demo" ? "datos de demostración en memoria" : "memoria" }),
+    salud: async () => ({ ok: true, detalle: tipo === "demo" ? "in-memory demo data" : "memory" }),
   };
 }
 
@@ -60,7 +60,7 @@ export function repositorioLocal(carpeta = CARPETA_LOCAL): RepositorioNoticias {
     listar: async (c) => filtrar(leerTodo(), c),
     obtener: async (fecha) => leerTodo().find((r) => r.fecha === fecha) ?? null,
     guardar: async (r) => writeJson(join(carpeta, `${r.fecha}.json`), RegistroResumen.parse(r)),
-    salud: async () => ({ ok: true, detalle: `${leerTodo().length} resúmenes en ${carpeta}` }),
+    salud: async () => ({ ok: true, detalle: `${leerTodo().length} digests in ${carpeta}` }),
   };
 }
 
@@ -119,9 +119,9 @@ export function repositorioSupabase(url: string, serviceRoleKey: string, espacio
     salud: async () => {
       try {
         await requestJson({ url: `${base}?select=fecha&limit=1`, headers, schema: z.array(z.unknown()), fetchImpl, timeoutMs: 5000 });
-        return { ok: true, detalle: "Supabase responde" };
+        return { ok: true, detalle: "Supabase is responding" };
       } catch {
-        return { ok: false, detalle: "Supabase no responde o falta la migración 0001" };
+        return { ok: false, detalle: "Supabase is not responding or migration 0001 is missing" };
       }
     },
   };

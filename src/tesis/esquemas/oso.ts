@@ -13,7 +13,7 @@ export type HandleConfig = z.infer<typeof HandleConfig>;
 
 export const ClaimType = z.enum(["announcement", "metric", "opinion", "promo", "other"]);
 
-/** Lo que el LLM de estructuración debe devolver por publicación. Solo se guarda una paráfrasis corta, nunca el texto completo. */
+/** What the structuring LLM must return per post. Only a short paraphrase is stored, never the full text. */
 export const ExtractedPost = z.object({
   post_id: z.string().min(1),
   url: HttpsUrl,
@@ -88,7 +88,7 @@ export const OsoNotionHit = z.object({
   account: z.string().nullable(),
   topic: z.string().nullable(),
   excerpt: z.string().max(800),
-  /** Siempre null en las exportaciones: las URL de páginas de Notion pertenecen a un espacio de trabajo privado y no deben publicarse. */
+  /** Always null in exports: Notion page URLs belong to a private workspace and must not be published. */
   url: HttpsUrl.nullable(),
 });
 export type OsoNotionHit = z.infer<typeof OsoNotionHit>;

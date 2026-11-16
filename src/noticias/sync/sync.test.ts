@@ -115,6 +115,6 @@ describe("leerDias", () => {
   it("valida el argumento --dias", () => {
     expect(leerDias([])).toBe(30);
     expect(leerDias(["--dias", "7"])).toBe(7);
-    expect(() => leerDias(["--dias", "0"])).toThrow(/entero/);
+    expect(() => leerDias(["--dias", "0"])).toThrow(/integer/);
   });
 });

@@ -104,9 +104,9 @@ describe("beta y régimen de BTC", () => {
 
   it("cuenta los cierres semanales consecutivos por debajo del promedio semanal y los traduce a un estado de alarma", () => {
     const base = Array.from({ length: 50 }, () => 100);
-    expect(btcRegime([...base, 101], 50, 4)?.state).toBe("intacto");
-    expect(btcRegime([...base, 90], 50, 4)).toMatchObject({ weeksBelow: 1, state: "perforado, ventana de recuperación abierta" });
-    expect(btcRegime([...base, 90, 89, 88, 87], 50, 4)).toMatchObject({ weeksBelow: 4, state: "activado" });
+    expect(btcRegime([...base, 101], 50, 4)?.state).toBe("intact");
+    expect(btcRegime([...base, 90], 50, 4)).toMatchObject({ weeksBelow: 1, state: "pierced — recovery window open" });
+    expect(btcRegime([...base, 90, 89, 88, 87], 50, 4)).toMatchObject({ weeksBelow: 4, state: "triggered" });
     expect(btcRegime([1, 2, 3], 50, 4)).toBeNull();
   });
 });
@@ -116,10 +116,10 @@ describe("computeTechnical", () => {
   const price = inputs.price as PriceData;
 
   it("reporta todo como no disponible cuando no hay fuente de precios", () => {
-    const t = computeTechnical(null, "expansión");
+    const t = computeTechnical(null, "expansion");
     expect(Object.values(t.values).filter((v) => v !== null)).toEqual([PARAMS.example_account_usd]);
-    expect(t.labels.technical_bias).toBe("sin datos");
-    expect(t.source).toBe("no disponible");
+    expect(t.labels.technical_bias).toBe("no data");
+    expect(t.source).toBe("not available");
     expect(t.confluence.every((c) => c.met === null)).toBe(true);
   });
 
@@ -129,14 +129,14 @@ describe("computeTechnical", () => {
     expect(at("near", "2026-10-15")).toBeCloseTo(4.6, 2);
     expect(at("btc", "2026-11-11")).toBeCloseTo(71_500, 0);
     expect(at("btc", "2026-11-01")).toBeCloseTo(77_600, 0);
-    expect(price.near.source).toMatch(/simuladas/);
+    expect(price.near.source).toMatch(/simulated/);
     expect(price.near.bars.at(-1)?.date).toBe(addDays(MOCK_END, -1));
   });
 
   it("arma una plantilla de riesgo cuya aritmética sigue las fórmulas del marco", () => {
-    const t = computeTechnical(price, "expansión");
+    const t = computeTechnical(price, "expansion");
     const v = t.values as Record<string, number>;
-    expect(t.labels.plan_status).toBe("setup disponible");
+    expect(t.labels.plan_status).toBe("setup available");
     expect(v.plan_stop).toBeCloseTo((v.plan_entry as number) * (1 - PARAMS.stop_beyond_npoc_pct / 100), 6);
     expect(v.plan_risk_usd).toBeCloseTo((PARAMS.example_account_usd * PARAMS.risk_per_trade_pct) / 100, 6);
     expect(v.plan_size_units).toBeCloseTo((v.plan_risk_usd as number) / ((v.plan_entry as number) - (v.plan_stop as number)), 6);
@@ -144,11 +144,11 @@ describe("computeTechnical", () => {
   });
 
   it("deriva el sesgo de los umbrales prerregistrados", () => {
-    const t = computeTechnical(price, "expansión");
+    const t = computeTechnical(price, "expansion");
     const score = t.confluence.filter((c) => c.met === true).length;
     expect(t.values.confluence_score).toBe(score);
     expect(t.values.confluence_total).toBe(t.confluence.length);
-    const expected = score >= PARAMS.confluence_constructive_min ? "constructivo" : score <= PARAMS.confluence_defensive_max ? "defensivo" : "neutral";
+    const expected = score >= PARAMS.confluence_constructive_min ? "constructive" : score <= PARAMS.confluence_defensive_max ? "defensive" : "neutral";
     expect(t.labels.technical_bias).toBe(expected);
   });
 

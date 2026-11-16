@@ -10,8 +10,8 @@ describe("redact", () => {
   });
 
   it("quita correos del texto publicado y de los logs", () => {
-    expect(scrubPii("Escribe a a.b+c@sub.example.org hoy")).toBe("Escribe a [correo] hoy");
-    expect(redactString("el usuario jane@example.org falló")).toBe("el usuario [correo] falló");
+    expect(scrubPii("Escribe a a.b+c@sub.example.org hoy")).toBe("Escribe a [email] hoy");
+    expect(redactString("el usuario jane@example.org falló")).toBe("el usuario [email] falló");
     expect(scrubPii("sin dirección, @cuenta está bien")).toBe("sin dirección, @cuenta está bien");
   });
 

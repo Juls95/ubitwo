@@ -44,7 +44,7 @@ export async function requestJson<T>({
   fetchImpl = fetch,
   timeoutMs = 30_000,
 }: HttpRequest<T>): Promise<T> {
-  if (!isSafeUrl(url)) throw new Error(`Petición rechazada por no usar https: ${redactString(url)}`);
+  if (!isSafeUrl(url)) throw new Error(`Request rejected: must use https: ${redactString(url)}`);
   const allHeaders = { "Content-Type": "application/json", ...headers };
   const request = { method, url: redactString(url), headers: redactHeaders(allHeaders), body: redactDeep(body) };
   let res: Response;
@@ -56,13 +56,13 @@ export async function requestJson<T>({
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (err) {
-    log.error("la petición no obtuvo respuesta", { request, error: String(err) });
-    throw new HttpError(`${method} ${redactString(url)} -> sin respuesta`, 0, undefined, "");
+    log.error("request got no response", { request, error: String(err) });
+    throw new HttpError(`${method} ${redactString(url)} -> no response`, 0, undefined, "");
   }
   const text = await res.text();
   const context = { request, response: { status: res.status, body: redactString(text.slice(0, 4000)) } };
   if (!res.ok) {
-    log.error("la petición falló", context);
+    log.error("request failed", context);
     const retryAfter = Number(res.headers.get("retry-after"));
     throw new HttpError(
       `${method} ${redactString(url)} -> ${res.status}`,
@@ -76,14 +76,14 @@ export async function requestJson<T>({
     try {
       json = JSON.parse(text);
     } catch {
-      log.error("la respuesta no es JSON", context);
-      throw new HttpError(`${method} ${redactString(url)} -> JSON inválido`, res.status, undefined, text);
+      log.error("response is not JSON", context);
+      throw new HttpError(`${method} ${redactString(url)} -> invalid JSON`, res.status, undefined, text);
     }
   }
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
-    log.error("la respuesta no cumple el esquema", { ...context, issues: parsed.error.issues.slice(0, 10) });
-    throw new HttpError(`${method} ${redactString(url)} -> no cumple el esquema`, res.status, undefined, text);
+    log.error("response does not match schema", { ...context, issues: parsed.error.issues.slice(0, 10) });
+    throw new HttpError(`${method} ${redactString(url)} -> schema mismatch`, res.status, undefined, text);
   }
   return parsed.data;
 }

@@ -1,6 +1,6 @@
 /**
- * Parámetros de análisis prerregistrados. Se fijaron antes de mirar los datos reales y se renderizan en TESIS.md
- * mediante marcadores {{param:*}}; todo cambio debe registrarse en la bitácora semanal de cambios.
+ * Preregistered analysis parameters. Fixed before looking at live data and rendered into TESIS.md
+ * via {{param:*}} placeholders; every change must be logged in the weekly changelog.
  */
 export const PARAMS = {
   regime_band_pct: 5,
@@ -15,7 +15,7 @@ export const PARAMS = {
   divergence_sentiment_band: 0.05,
   invalidation_quarters: 2,
   window_days: 30,
-  // Capa técnica (precio). Prerregistrada igual que los parámetros on-chain.
+  // Technical layer (price). Preregistered the same way as the on-chain parameters.
   sma_fast_days: 50,
   sma_slow_days: 200,
   weekly_sma_weeks: 20,
@@ -38,5 +38,5 @@ export const PARAMS = {
 
 export type ParamId = keyof typeof PARAMS;
 
-/** Estados de transacción que cuentan como éxito. Deben revisarse contra los valores reales de `transactions.status` antes de usarse en vivo. */
+/** Transaction statuses that count as success. Must be checked against real `transactions.status` values before live use. */
 export const SUCCESS_STATUS_PREFIX = "SUCCESS";

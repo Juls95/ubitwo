@@ -35,7 +35,7 @@ function parseArgs(argv: readonly string[]) {
 
 async function main() {
   const env = loadEnv();
-  if (env.DATA_MODE !== "live") throw new Error("oso:run solo corre con DATA_MODE=live; usa `pnpm tesis:mock` para datos simulados");
+  if (env.DATA_MODE !== "live") throw new Error("oso:run only runs with DATA_MODE=live; use `pnpm tesis:mock` for simulated data");
   const { XAI_API_KEY } = requireEnv(env, ["XAI_API_KEY"]);
   if (!existsSync(HANDLES_FILE)) throw new Error(`Falta ${HANDLES_FILE}. Copia config/oso.handles.example.yaml y agrega las cuentas a seguir.`);
   const config = HandleConfig.parse(parseYaml(readFileSync(HANDLES_FILE, "utf8")));
@@ -46,9 +46,9 @@ async function main() {
   if (env.NOTION_TOKEN) {
     const snap = await ingestFromEnv({ env, token: env.NOTION_TOKEN });
     writeJson(`${root}/oso/notion/near.json`, snap);
-    log.info("instantánea de notion", { hits: snap.hits.length, scanned: snap.counts.scanned_pages });
+    log.info("notion snapshot", { hits: snap.hits.length, scanned: snap.counts.scanned_pages });
   } else {
-    log.warn("falta NOTION_TOKEN; Oso continúa sin las tablas de Notion");
+    log.warn("missing NOTION_TOKEN; Bear continues without Notion tables");
   }
 
   const { backfillWeeks, date } = parseArgs(process.argv);
@@ -78,7 +78,7 @@ async function main() {
       posts_fetched: fetched, posts: scorePosts(kept, tiers), discarded,
     });
     writeJson(`${root}/oso/daily/${day}.json`, daily);
-    log.info("día terminado", { day, kept: kept.length, discarded: discarded.length, fetched });
+    log.info("day finished", { day, kept: kept.length, discarded: discarded.length, fetched });
   }
 
   const dailyDir = `${root}/oso/daily`;
@@ -91,6 +91,6 @@ async function main() {
 }
 
 main().catch((err: unknown) => {
-  log.error("oso falló", { error: err instanceof Error ? err.message : String(err) });
+  log.error("bear failed", { error: err instanceof Error ? err.message : String(err) });
   process.exitCode = 1;
 });

@@ -79,11 +79,11 @@ export async function sincronizar(o: OpcionesSync): Promise<ResultadoSync> {
       );
       r.guardadas++;
     } catch (err) {
-      const mensaje = err instanceof ErrorResumen ? err.message : `Error inesperado: ${(err as Error).message}`;
-      log.warn("página de resumen no válida", { pagina: pagina.id, error: mensaje });
+      const mensaje = err instanceof ErrorResumen ? err.message : `Unexpected error: ${(err as Error).message}`;
+      log.warn("invalid digest page", { pagina: pagina.id, error: mensaje });
       r.errores.push({ pagina: pagina.id, error: mensaje });
     }
   }
-  log.info("sincronización terminada", { ...r, errores: r.errores.length, destino: o.repo.tipo });
+  log.info("sync finished", { ...r, errores: r.errores.length, destino: o.repo.tipo });
   return r;
 }

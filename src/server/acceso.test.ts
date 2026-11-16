@@ -21,7 +21,7 @@ function authFalso(): ClienteAuth & { enviados: { email: string; crear: boolean 
     enviarEnlace: async (email, _r, crear) => void enviados.push({ email, crear }),
     usuario: async (token) => {
       if (token.startsWith("valido-")) return { email: token.slice(7).replace("_", "@") };
-      throw new Error("token inválido");
+      throw new Error("invalid token");
     },
   };
 }
@@ -40,8 +40,8 @@ afterEach(async () => {
   servidor = undefined;
 });
 
-describe("sesión firmada", () => {
-  it("verifica la firma y la caducidad", () => {
+describe("signed session", () => {
+  it("verifies the signature and expiry", () => {
     const t = firmarSesion("Ana@Example.org", SECRETO, 0);
     expect(verificarSesion(t, SECRETO, 1000)).toMatchObject({ email: "ana@example.org" });
     expect(verificarSesion(t, "otro".repeat(10), 1000)).toBeNull();
@@ -50,37 +50,37 @@ describe("sesión firmada", () => {
     expect(verificarSesion("basura", SECRETO)).toBeNull();
   });
 
-  it("la cookie es HttpOnly, SameSite=Lax y Secure en producción", () => {
+  it("the cookie is HttpOnly, SameSite=Lax, and Secure in production", () => {
     expect(cookieSesion("v", true)).toMatch(/HttpOnly; SameSite=Lax; Max-Age=\d+; Secure/);
     expect(cookieSesion("v", false)).not.toMatch(/Secure/);
   });
 });
 
-describe("política de acceso", () => {
+describe("access policy", () => {
   it.each([
     [{}, "demo", "abierto"],
     [CONFIG, "supabase", "sesion"],
     [{}, "local", "abierto-local"],
     [{ NODE_ENV: "production" }, "supabase", "bloqueado"],
-    // Sin lista de correos, el acceso cuenta como no configurado (falla cerrado).
+    // An empty allowlist counts as access not configured (fail closed).
     [{ ...CONFIG, EMAILS_PERMITIDOS: "", NODE_ENV: "production" }, "supabase", "bloqueado"],
   ] as const)("%j + %s → %s", (vars, fuente, esperada) => {
     expect(politicaAcceso(loadEnv({ ...vars }), fuente)).toBe(esperada);
   });
 
-  it("una lista vacía no deja entrar a nadie", () => {
+  it("an empty list lets nobody in", () => {
     expect(emailPermitido(loadEnv({ ...CONFIG, EMAILS_PERMITIDOS: "" }), "ana@example.org")).toBe(false);
     expect(emailPermitido(loadEnv(CONFIG), "ANA@example.org")).toBe(true);
   });
 
-  it("en producción el enlace solo vuelve a APP_URL", () => {
+  it("in production the magic link only returns to APP_URL", () => {
     expect(() => urlRetorno(loadEnv({ NODE_ENV: "production" }))).toThrow(/APP_URL/);
-    expect(urlRetorno(loadEnv({ NODE_ENV: "production", APP_URL: "https://ubitwo.onrender.com" }))).toBe("https://ubitwo.onrender.com/acceso");
+    expect(urlRetorno(loadEnv({ NODE_ENV: "production", APP_URL: "https://ubitwo.onrender.com" }))).toBe("https://ubitwo.onrender.com/login");
   });
 });
 
-describe("rutas de acceso", () => {
-  it("con datos reales exige sesión y la emite tras validar el token de Supabase", async () => {
+describe("access routes", () => {
+  it("with real data requires a session and issues one after validating the Supabase token", async () => {
     await iniciar(loadEnv({ ...CONFIG, EMAILS_PERMITIDOS: "ana@example.org" }), "supabase", authFalso());
     expect((await fetch(`${base}/api/resumenes`)).status).toBe(401);
     expect((await fetch(`${base}/api/estado`)).status).toBe(200);
@@ -95,7 +95,7 @@ describe("rutas de acceso", () => {
     expect((await fetch(`${base}/api/resumenes`, { headers: { cookie: `${cookie}x` } })).status).toBe(401);
   });
 
-  it("flujo completo: enlace, verificación, cookie y salida", async () => {
+  it("full flow: link, verification, cookie, and sign-out", async () => {
     const auth = authFalso();
     auth.usuario = async () => ({ email: "ana@example.org" });
     await iniciar(loadEnv({ ...CONFIG, EMAILS_PERMITIDOS: "ana@example.org" }), "supabase", auth);
@@ -119,7 +119,7 @@ describe("rutas de acceso", () => {
     expect(salir.headers.get("set-cookie")).toMatch(/Max-Age=0/);
   });
 
-  it("rechaza POST desde otro origen y limita los envíos de enlaces", async () => {
+  it("rejects POSTs from another origin and rate-limits link sends", async () => {
     await iniciar(loadEnv(CONFIG), "supabase", authFalso());
     expect((await post("/api/sesion/enlace", { email: "a@example.org" }, { origin: "https://malicioso.example" })).status).toBe(403);
     const estados: number[] = [];
@@ -128,14 +128,14 @@ describe("rutas de acceso", () => {
     expect((await post("/api/sesion/enlace", { email: "no-es-correo" })).status).toBe(429);
   });
 
-  it("en producción sin acceso configurado no sirve datos reales", async () => {
+  it("in production without access configured does not serve real data", async () => {
     await iniciar(loadEnv({ NODE_ENV: "production" }), "supabase", null);
     const r = await fetch(`${base}/api/resumenes`);
     expect(r.status).toBe(503);
     expect(((await r.json()) as { error: string }).error).toMatch(/SESSION_SECRET/);
   });
 
-  it("la demo es pública y no necesita sesión", async () => {
+  it("the demo is public and needs no session", async () => {
     await iniciar(loadEnv({}), "demo", null);
     expect((await fetch(`${base}/api/resumenes`)).status).toBe(200);
     expect(((await (await fetch(`${base}/api/sesion`)).json()) as { politica: string }).politica).toBe("abierto");

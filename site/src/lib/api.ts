@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { RegistroResumen, Postura, TipoActivo, Activo, Sesgo } from "../../../src/noticias/esquema";
 
-/** Error de la API con el estado HTTP, para que la UI distinga "inicia sesión" de "algo falló". */
+/** API error with HTTP status so the UI can tell "sign in" from "something failed". */
 export class ErrorApi extends Error {
   constructor(
     readonly status: number,
@@ -77,7 +77,7 @@ export type Respuesta = z.infer<typeof Respuesta>;
 
 type Opciones = { metodo?: "GET" | "POST"; cuerpo?: unknown; fetchImpl?: typeof fetch };
 
-/** Envoltura tipada de fetch: valida cada respuesta con zod y convierte los errores en ErrorApi con mensaje en español. */
+/** Typed fetch wrapper: validates each response with zod and turns failures into ErrorApi with an English message. */
 export async function pedir<T>(ruta: string, schema: z.ZodType<T>, { metodo = "GET", cuerpo, fetchImpl = fetch }: Opciones = {}): Promise<T> {
   let res: Response;
   try {
@@ -88,17 +88,17 @@ export async function pedir<T>(ruta: string, schema: z.ZodType<T>, { metodo = "G
       body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
     });
   } catch {
-    throw new ErrorApi(0, "No hay conexión con el servidor. ¿Está corriendo pnpm start?");
+    throw new ErrorApi(0, "No connection to the server. Is pnpm start running?");
   }
   const json: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const e = CuerpoError.safeParse(json);
-    throw new ErrorApi(res.status, e.success ? e.data.error : `El servidor respondió ${res.status}`);
+    throw new ErrorApi(res.status, e.success ? e.data.error : `The server responded with ${res.status}`);
   }
   const r = schema.safeParse(json);
   if (!r.success) {
     window.dispatchEvent(new CustomEvent("ubitwo:error", { detail: { ruta, status: res.status, issues: r.error.issues.slice(0, 5) } }));
-    throw new ErrorApi(res.status, `Respuesta inesperada de ${ruta}. ¿El servidor y la página son de la misma versión?`);
+    throw new ErrorApi(res.status, `Unexpected response from ${ruta}. Are the server and page the same version?`);
   }
   return r.data;
 }

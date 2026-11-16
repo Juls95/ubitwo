@@ -12,17 +12,17 @@ import { PaginaEstado } from "./pages/PaginaEstado";
 import { PaginaAcceso, tokenEnLaUrl } from "./pages/PaginaAcceso";
 
 export const NAV = [
-  { href: "#/", label: "Inicio" },
-  { href: "#/noticias", label: "Noticias" },
+  { href: "#/", label: "Home" },
+  { href: "#/news", label: "News" },
   { href: "#/tickers", label: "Tickers" },
-  { href: "#/preguntar", label: "Pregunta" },
-  { href: "#/tesis", label: "Tesis" },
-  { href: "#/metodologia", label: "Metodología" },
-  { href: "#/estado", label: "Estado" },
+  { href: "#/ask", label: "Ask" },
+  { href: "#/thesis", label: "Thesis" },
+  { href: "#/methodology", label: "Methodology" },
+  { href: "#/status", label: "Status" },
 ];
 
-// Supabase devuelve el enlace mágico a /acceso#access_token=…; ese fragmento no es una ruta hash y se atiende en PaginaAcceso.
-const leerRuta = () => (tokenEnLaUrl() ? "/acceso" : window.location.hash.replace(/^#/, "") || "/");
+// Supabase returns the magic link to /acceso or /login#access_token=…; that fragment is not a hash route and is handled in PaginaAcceso.
+const leerRuta = () => (tokenEnLaUrl() ? "/login" : window.location.hash.replace(/^#/, "") || "/");
 
 export function useRuta(): string {
   const [ruta, setRuta] = useState(leerRuta);
@@ -43,15 +43,15 @@ type Props = { estado: Estado | null; sesion: Sesion | null; alCambiarSesion: ()
 export function Pagina({ ruta, ...p }: Props & { ruta: string }): ReactNode {
   const ticker = /^\/tickers\/([^/]+)$/.exec(ruta);
   if (ticker) return <PaginaTicker ticker={decodeURIComponent(ticker[1] ?? "")} />;
-  const tesis = /^\/tesis(?:\/(\w+))?(?:\/(\w+))?$/.exec(ruta);
-  if (tesis) return <PaginaTesis seccion={tesis[1] ?? "resumen"} agente={tesis[2]} />;
+  const tesis = /^\/thesis(?:\/(\w+))?(?:\/(\w+))?$/.exec(ruta);
+  if (tesis) return <PaginaTesis seccion={tesis[1] ?? "summary"} agente={tesis[2]} />;
   switch (ruta) {
-    case "/noticias": return <PaginaNoticias />;
+    case "/news": return <PaginaNoticias />;
     case "/tickers": return <PaginaTickers />;
-    case "/preguntar": return <PaginaPreguntar estado={p.estado} />;
-    case "/metodologia": return <PaginaMetodologia />;
-    case "/estado": return <PaginaEstado estado={p.estado} sesion={p.sesion} />;
-    case "/acceso": return <PaginaAcceso sesion={p.sesion} alCambiarSesion={p.alCambiarSesion} />;
+    case "/ask": return <PaginaPreguntar estado={p.estado} />;
+    case "/methodology": return <PaginaMetodologia />;
+    case "/status": return <PaginaEstado estado={p.estado} sesion={p.sesion} />;
+    case "/login": return <PaginaAcceso sesion={p.sesion} alCambiarSesion={p.alCambiarSesion} />;
     default: return <PaginaInicio estado={p.estado} />;
   }
 }
@@ -60,7 +60,7 @@ export function BannerDemo({ estado }: { estado: Estado | null }) {
   if (!estado?.demo) return null;
   return (
     <div className="mock-banner" role="status">
-      DATOS DE DEMOSTRACIÓN · Las noticias que ves son ficticias. Conecta Supabase o Notion para ver las tuyas: <a href="#/estado">¿qué falta?</a>
+      DEMO DATA · The news you see is fictional. Connect Supabase or Notion to see yours: <a href="#/status">what&apos;s missing?</a>
     </div>
   );
 }
@@ -69,12 +69,12 @@ function BotonSesion({ sesion, alSalir }: { sesion: Sesion | null; alSalir: () =
   if (!sesion || sesion.politica === "abierto" || sesion.politica === "abierto-local") return null;
   if (sesion.usuario) {
     return (
-      <button type="button" className="enlace-boton sesion-boton" onClick={alSalir} title={`Sesión: ${sesion.usuario}`}>
-        Salir
+      <button type="button" className="enlace-boton sesion-boton" onClick={alSalir} title={`Signed in as ${sesion.usuario}`}>
+        Sign out
       </button>
     );
   }
-  return <a className="sesion-boton" href="#/acceso">Entrar</a>;
+  return <a className="sesion-boton" href="#/login">Sign in</a>;
 }
 
 export function App() {
@@ -95,12 +95,12 @@ export function App() {
 
   return (
     <div className={`shell ${mundo ? "is-world" : ""}`}>
-      <a className="saltar" href="#contenido">Saltar al contenido</a>
+      <a className="saltar" href="#contenido">Skip to content</a>
       <BannerDemo estado={estado} />
       {!mundo && (
         <header className="topbar">
           <a href="#/" className="brand">ubitwo</a>
-          <nav aria-label="Principal">
+          <nav aria-label="Main">
             {NAV.map((n) => {
               const activa = n.href === "#/" ? ruta === "/" : `#${ruta}`.startsWith(n.href);
               return (
@@ -114,14 +114,14 @@ export function App() {
         </header>
       )}
       <main id="contenido">
-        <ErrorBoundary key={ruta} label="Página">
+        <ErrorBoundary key={ruta} label="Page">
           <Pagina ruta={ruta} estado={estado} sesion={sesion} alCambiarSesion={() => setVuelta((v) => v + 1)} />
         </ErrorBoundary>
       </main>
       {!mundo && (
         <footer>
-          <span>ubitwo {estado ? `· ${estado.version} · fuente: ${estado.fuente}` : ""}</span>
-          <span>Esto no es asesoría financiera.</span>
+          <span>ubitwo {estado ? `· ${estado.version} · source: ${estado.fuente}` : ""}</span>
+          <span>This is not financial advice.</span>
         </footer>
       )}
     </div>

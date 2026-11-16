@@ -6,9 +6,9 @@ import { isNearTicker, mentionsNearFields } from "./match";
 
 const EXCERPT = 800;
 const SENTIMENT = ["positive", "neutral", "negative", "mixed"] as const;
-const SENTIMENT_LABEL: Record<NotionSentiment, string> = { positive: "positivo", neutral: "neutral", negative: "negativo", mixed: "mixto" };
+const SENTIMENT_LABEL: Record<NotionSentiment, string> = { positive: "positive", neutral: "neutral", negative: "negative", mixed: "mixed" };
 
-/** Las opciones del select de Notion las define en español el espacio de trabajo; el pipeline las normaliza a ids internos estables (en inglés). */
+/** Notion select options are defined in Spanish by the workspace; the pipeline normalizes them to stable English internal ids. */
 const SENTIMENT_MAP: Record<string, NotionSentiment> = { positivo: "positive", neutral: "neutral", negativo: "negative", mixto: "mixed" };
 
 export function normalizeSentiment(raw: string): NotionSentiment | null {
@@ -17,10 +17,10 @@ export function normalizeSentiment(raw: string): NotionSentiment | null {
 
 const THEMES: { id: string; title: string; test: (blob: string) => boolean }[] = [
   { id: "intents_security", title: "NEAR Intents / Omni", test: (t) => /intents|omni|exploit|reembolso|refund/.test(t) },
-  { id: "whale", title: "Posicionamiento on-chain", test: (t) => /ballena|whale|mk4|10x/.test(t) },
+  { id: "whale", title: "On-chain positioning", test: (t) => /ballena|whale|mk4|10x/.test(t) },
   { id: "brave", title: "NEAR × Brave", test: (t) => /brave/.test(t) },
-  { id: "conviction", title: "Convicción de las mesas", test: (t) => /convicci[oó]n|top 10|fuerza relativa|\brs\b|alianza/.test(t) },
-  { id: "tape", title: "Cinta de precios y altcoins", test: (t) => /bleeding|fake.?out|pennant|triangle|nibble|longs|alts/.test(t) },
+  { id: "conviction", title: "Desk conviction", test: (t) => /convicci[oó]n|top 10|fuerza relativa|\brs\b|alianza/.test(t) },
+  { id: "tape", title: "Price tape and alts", test: (t) => /bleeding|fake.?out|pennant|triangle|nibble|longs|alts/.test(t) },
 ];
 
 function clip(text: string, max = EXCERPT): string {
@@ -52,9 +52,9 @@ function paragraphs(counts: OsoNotionSnapshot["counts"], hits: readonly OsoNotio
   const tickers = hits.filter((h) => h.source === "tickers_info");
   const out: string[] = [];
   out.push(
-    `Oso leyó TickersInfo, X Creative Output y X Account Analyses en busca de NEAR (el ticker o una mención en mayúsculas, no las palabras inglesas «near» o «nearly»). ` +
-      `Quedaron ${counts.tickers} filas de TickersInfo, ${counts.creative} de X Creative Output y ${counts.analyses} de X Account Analyses, ` +
-      `tras revisar ${counts.scanned_pages} páginas y descartar ${counts.discarded_false_positives} coincidencias falsas.`,
+    `Bear read TickersInfo, X Creative Output, and X Account Analyses for NEAR (the ticker or an uppercase mention, not the English words "near" or "nearly"). ` +
+      `Kept ${counts.tickers} TickersInfo rows, ${counts.creative} X Creative Output rows, and ${counts.analyses} X Account Analyses rows, ` +
+      `after scanning ${counts.scanned_pages} pages and discarding ${counts.discarded_false_positives} false matches.`,
   );
   if (tickers.length) {
     out.push(
@@ -64,7 +64,7 @@ function paragraphs(counts: OsoNotionSnapshot["counts"], hits: readonly OsoNotio
     );
   }
   const withSent = SENTIMENT.map((k) => `${SENTIMENT_LABEL[k]}: ${sentiment[k]}`).join("; ");
-  out.push(`Sentimiento declarado en las filas etiquetadas: ${withSent}. Las cifras que aparecen en estas filas son afirmaciones de las fuentes, no datos de Bisonte.`);
+  out.push(`Declared sentiment on labeled rows: ${withSent}. Figures that appear in these rows are source claims, not Bison measurements.`);
   return out;
 }
 
@@ -79,13 +79,13 @@ export function hitFromTicker(page: NotionPage): OsoNotionHit | null {
   const newsDate = isoDate(lastNews);
   const bits = [
     what,
-    price ? `Precio (TickersInfo): ${price}` : "",
+    price ? `Price (TickersInfo): ${price}` : "",
     lastNews,
   ].filter(Boolean);
   return OsoNotionHit.parse({
     source: "tickers_info",
     page_id: page.id,
-    title: scrubPii(title) || "ticker sin título",
+    title: scrubPii(title) || "untitled ticker",
     date: newsDate,
     sentiment: null,
     account: scrubPii(propertyText(p.Username)) || null,
@@ -109,7 +109,7 @@ export function hitFromDesk(page: NotionPage, source: Exclude<NotionSource, "tic
   return OsoNotionHit.parse({
     source,
     page_id: page.id,
-    title: scrubPii(title) || "sin título",
+    title: scrubPii(title) || "untitled",
     date,
     sentiment,
     account: scrubPii(account) || null,

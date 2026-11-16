@@ -1,87 +1,87 @@
-# Conectar ubitwo con Supabase, Notion y Render
+# Connect ubitwo to Supabase, Notion, and Render
 
-ubitwo funciona sin nada de esto: sin variables arranca con noticias de demostración y la tesis simulada. Esta guía conecta tus datos reales en cuatro pasos. Al final, la página **Estado** del sitio (y `pnpm check-env` en tu computadora) debe mostrar todo con ✓.
+ubitwo works without any of this: with no variables it boots with demo news and the simulated thesis. This guide connects your real data in four steps. At the end, the site **Status** page (and `pnpm check-env` on your machine) should show everything with ✓.
 
-> Nunca pegues un secreto en un archivo del repositorio, en un issue o en un chat. Van en `.env` (local) o en el panel de Render.
+> Never paste a secret into a repo file, an issue, or a chat. They go in `.env` (local) or in the Render dashboard.
 
 ---
 
-## 1. Supabase (base de datos e inicio de sesión)
+## 1. Supabase (database and sign-in)
 
-1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. **Crear la tabla.** Abre *SQL Editor*, pega el contenido de `supabase/migrations/0001_noticias.sql` y ejecútalo. Crea `resumenes_diarios` con RLS activado y sin políticas: nadie puede leerla con la clave pública; solo el servidor, con la service role.
-3. **Copiar las claves.** En *Project Settings → API*:
+1. Create a project at [supabase.com](https://supabase.com).
+2. **Create the table.** Open *SQL Editor*, paste the contents of `supabase/migrations/0001_noticias.sql`, and run it. It creates `resumenes_diarios` with RLS enabled and no policies: nobody can read it with the public key; only the server, with the service role.
+3. **Copy the keys.** Under *Project Settings → API*:
    - `Project URL` → `SUPABASE_URL`
-   - `anon public` → `SUPABASE_ANON_KEY` (es pública; solo sirve para enviar el enlace mágico)
-   - `service_role` → `SUPABASE_SERVICE_ROLE_KEY` (**secreta**: solo en el servidor y en el cron)
-4. **Inicio de sesión con enlace mágico.** En *Authentication*:
-   - *Sign In / Providers → Email*: activado. ubitwo solo deja entrar a los correos de `EMAILS_PERMITIDOS`, aunque alguien se registre por su cuenta en Supabase. Si además desactivas *Allow new users to sign up*, crea a cada persona a mano en *Authentication → Users → Add user*.
-   - *URL Configuration*: `Site URL` = la URL de Render (paso 3). En *Redirect URLs* agrega `https://<tu-servicio>.onrender.com/acceso` y, para probar en local, `http://localhost:3000/acceso`.
-5. Elige quién entra: `EMAILS_PERMITIDOS=tu@correo.com,otra@persona.com`. **Si la lista está vacía, nadie entra.**
+   - `anon public` → `SUPABASE_ANON_KEY` (public; only used to send the magic link)
+   - `service_role` → `SUPABASE_SERVICE_ROLE_KEY` (**secret**: server and sync cron only)
+4. **Magic-link sign-in.** Under *Authentication*:
+   - *Sign In / Providers → Email*: enabled. ubitwo only lets emails in `EMAILS_PERMITIDOS` through, even if someone signs up on their own in Supabase. If you also disable *Allow new users to sign up*, create each person by hand under *Authentication → Users → Add user*.
+   - *URL Configuration*: `Site URL` = the Render URL (step 3). Under *Redirect URLs* add `https://<your-service>.onrender.com/login` and, for local testing, `http://localhost:3000/login`.
+5. Choose who can enter: `EMAILS_PERMITIDOS=you@email.com,other@person.com`. **If the list is empty, nobody gets in.**
 
-## 2. Notion (de dónde salen las noticias)
+## 2. Notion (where the news comes from)
 
-1. En [notion.so/profile/integrations](https://www.notion.so/profile/integrations) crea una integración **interna** con permiso de solo lectura de contenido. Copia el token → `NOTION_TOKEN`.
-2. Abre la base **Daily Market Digest** → menú `•••` → *Connections* → agrega tu integración. Su ID ya viene configurado: `NOTION_DB_RESUMENES=b9c8d51185c9473fb93ba810788cf536`.
-3. Qué espera ubitwo de cada página (lo que ya escribe el bot):
-   - Propiedades: título, `Fecha`, `Sesgo general` y `Estado` (las páginas en `pendiente` se omiten).
-   - En el cuerpo, un bloque de código JSON con `"schema": "<algo>.digest.v1"`, el contexto y los activos. ubitwo lo valida y descarta lo que no cumpla.
-4. Si varias personas escriben en la misma base, filtra por dueño: `NOTION_PROP_USUARIO=<nombre de la propiedad persona o correo>` y `NOTION_FILTRO_USUARIO=tu@correo.com`.
-5. Para la tesis (opcional), comparte también **TickersInfo**, **X Creative Output** y **X Account Analyses** con la misma integración. Sus IDs están en `config/oso.notion.yaml`.
+1. At [notion.so/profile/integrations](https://www.notion.so/profile/integrations) create an **internal** integration with read-only content access. Copy the token → `NOTION_TOKEN`.
+2. Open the **Daily Market Digest** database → `•••` menu → *Connections* → add your integration. Its ID is already configured: `NOTION_DB_RESUMENES=b9c8d51185c9473fb93ba810788cf536`.
+3. What ubitwo expects from each page (what the bot already writes):
+   - Properties: title, `Fecha`, `Sesgo general`, and `Estado` (pages in `pendiente` are skipped).
+   - In the body, a JSON code block with `"schema": "<something>.digest.v1"`, context, and assets. ubitwo validates it and discards what does not match.
+4. If several people write in the same database, filter by owner: `NOTION_PROP_USUARIO=<person or email property name>` and `NOTION_FILTRO_USUARIO=you@email.com`.
+5. For the thesis (optional), also share **TickersInfo**, **X Creative Output**, and **X Account Analyses** with the same integration. Their IDs live in `config/oso.notion.yaml`.
 
-Prueba en local:
+Try locally:
 
 ```bash
-cp .env.example .env   # y llena SUPABASE_* y NOTION_TOKEN
+cp .env.example .env   # then fill SUPABASE_* and NOTION_TOKEN
 pnpm check-env
 pnpm noticias:sync --dias 30
 ```
 
-Debe terminar con algo como `noticias:sync → supabase · leídas 30 · guardadas 30 …`.
+It should end with something like `noticias:sync → supabase · read 30 · saved 30 …`.
 
-## 3. Render (publicar)
+## 3. Render (publish)
 
-1. Sube el repositorio a GitHub y en [dashboard.render.com](https://dashboard.render.com) elige **New → Blueprint** y selecciona el repo. Render lee `render.yaml` y crea:
-   - **ubitwo** (servicio web): instala con el lockfile congelado, ejecuta `pnpm build` y luego `pnpm start`. Salud en `/healthz`.
-   - **ubitwo-sync** (cron, cada hora): `pnpm noticias:sync --dias 3`.
-2. Render te pedirá los valores marcados como secretos. Llénalos:
+1. Push the repository to GitHub and at [dashboard.render.com](https://dashboard.render.com) choose **New → Blueprint** and select the repo. Render reads `render.yaml` and creates:
+   - **ubitwo** (web service): installs with a frozen lockfile, runs `pnpm build`, then `pnpm start`. Health at `/healthz`.
+   - **ubitwo-sync** (cron, hourly): `pnpm noticias:sync --dias 3`.
+2. Render will ask for the values marked as secrets. Fill them in:
 
-   | Variable | Servicio | Valor |
+   | Variable | Service | Value |
    | --- | --- | --- |
-   | `SUPABASE_URL` | ambos | Project URL |
-   | `SUPABASE_SERVICE_ROLE_KEY` | ambos | service_role (secreta) |
+   | `SUPABASE_URL` | both | Project URL |
+   | `SUPABASE_SERVICE_ROLE_KEY` | both | service_role (secret) |
    | `SUPABASE_ANON_KEY` | web | anon public |
-   | `NOTION_TOKEN` | ambos | token de la integración |
-   | `APP_URL` | web | `https://<tu-servicio>.onrender.com` |
-   | `EMAILS_PERMITIDOS` | web | tus correos, separados por comas |
-   | `GEMINI_API_KEY` | web | clave de Google AI Studio (opcional) |
-   | `LLM_MODEL` | web | el modelo de Gemini que quieras usar (opcional) |
-   | `NOTION_PROP_USUARIO`, `NOTION_FILTRO_USUARIO` | cron | solo si filtras por dueño |
+   | `NOTION_TOKEN` | both | integration token |
+   | `APP_URL` | web | `https://<your-service>.onrender.com` |
+   | `EMAILS_PERMITIDOS` | web | your emails, comma-separated |
+   | `GEMINI_API_KEY` | web | Google AI Studio key (optional) |
+   | `LLM_MODEL` | web | the Gemini model you want (optional) |
+   | `NOTION_PROP_USUARIO`, `NOTION_FILTRO_USUARIO` | cron | only if you filter by owner |
 
-   `SESSION_SECRET` lo genera Render solo. `NOTION_DB_RESUMENES` ya viene con su valor.
-3. Cuando termine el primer deploy, copia la URL pública a `APP_URL` y a Supabase (*URL Configuration*, paso 1.4).
-4. Ejecuta el cron una vez a mano (*ubitwo-sync → Trigger Run*) para cargar el historial: puedes cambiar temporalmente el comando a `pnpm noticias:sync --dias 90`.
+   `SESSION_SECRET` is generated by Render. `NOTION_DB_RESUMENES` already has its value.
+3. When the first deploy finishes, copy the public URL into `APP_URL` and into Supabase (*URL Configuration*, step 1.4).
+4. Run the cron once by hand (*ubitwo-sync → Trigger Run*) to load history: you can temporarily change the command to `pnpm noticias:sync --dias 90`.
 
-> El plan *starter* es el mínimo que admite cron jobs. Si usas el plan gratuito para el web, el cron debe ir en un plan de pago o correr desde otro programador (GitHub Actions, por ejemplo) con las mismas variables.
+> The *starter* plan is the minimum that supports cron jobs. If you use the free plan for the web service, the cron must be on a paid plan or run from another scheduler (GitHub Actions, for example) with the same variables.
 
-## 4. IA (opcional)
+## 4. AI (optional)
 
-«Pregunta» funciona sin IA: responde con los fragmentos más relevantes. Para respuestas redactadas:
+Ask works without AI: it answers with the most relevant fragments. For drafted answers:
 
-- `GEMINI_API_KEY` y `LLM_MODEL` (Gemini es el proveedor por defecto).
-- Cambiar de modelo es cambiar `LLM_MODEL`. Cambiar de proveedor: `LLM_PROVIDER=xai` + `XAI_API_KEY`.
+- `GEMINI_API_KEY` and `LLM_MODEL` (Gemini is the default provider).
+- Changing models is changing `LLM_MODEL`. Changing providers: `LLM_PROVIDER=xai` + `XAI_API_KEY`.
 
-## Comprobar
+## Check
 
-- En el sitio: **Estado** muestra cada conexión con ✓ o lo que falta (nunca muestra valores).
-- En local: `pnpm check-env`.
-- Si el sitio pide iniciar sesión y no te llega el correo: revisa que tu correo esté en `EMAILS_PERMITIDOS`, que `APP_URL` coincida con la URL real y que `/acceso` esté en las *Redirect URLs* de Supabase.
+- On the site: **Status** shows each connection with ✓ or what is missing (never values).
+- Locally: `pnpm check-env`.
+- If the site asks you to sign in and the email never arrives: check that your email is in `EMAILS_PERMITIDOS`, that `APP_URL` matches the real URL, and that `/login` is in Supabase *Redirect URLs*.
 
-## Qué variable va dónde
+## Which variable goes where
 
-| Variable | Navegador | Servidor web | Cron |
+| Variable | Browser | Web server | Cron |
 | --- | :-: | :-: | :-: |
-| `SUPABASE_SERVICE_ROLE_KEY`, `NOTION_TOKEN`, `GEMINI_API_KEY`, `SESSION_SECRET` | nunca | sí | según el caso |
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | no (el servidor hace de intermediario) | sí | `SUPABASE_URL` |
+| `SUPABASE_SERVICE_ROLE_KEY`, `NOTION_TOKEN`, `GEMINI_API_KEY`, `SESSION_SECRET` | never | yes | as needed |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | no (the server is the intermediary) | yes | `SUPABASE_URL` |
 
-El navegador solo habla con tu servidor (`connect-src 'self'`); ninguna clave llega al bundle.
+The browser only talks to your server (`connect-src 'self'`); no key reaches the bundle.

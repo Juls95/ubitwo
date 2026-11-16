@@ -1,5 +1,5 @@
 import { z } from "zod";
 
-// Sin esto, zod prueba `new Function` para compilar validadores y la CSP (sin unsafe-eval) lo reporta como violación.
-// Va en su propio módulo, importado primero: zod lo consulta al construir esquemas, que ocurre al importar.
+// Without this, zod tries `new Function` to compile validators and CSP (no unsafe-eval) reports a violation.
+// Own module, imported first: zod consults this when building schemas, which happens on import.
 z.config({ jitless: true });

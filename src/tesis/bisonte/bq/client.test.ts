@@ -21,7 +21,7 @@ describe("consultas de BigQuery", () => {
   });
 
   it("rechaza ids que podrían escapar de la carpeta de consultas", () => {
-    expect(() => loadQuery("../../../package")).toThrow(/Id de consulta inválido/);
+    expect(() => loadQuery("../../../package")).toThrow(/Invalid query id/);
   });
 });
 

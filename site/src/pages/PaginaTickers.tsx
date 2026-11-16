@@ -13,17 +13,17 @@ export function PaginaTickers() {
     <section className="page">
       <header className="page-head">
         <span className="eyebrow">Tickers</span>
-        <h1>Todo lo que se ha mencionado</h1>
-        <p>Los más mencionados primero. La barra muestra cuántos días fue alcista (verde), neutral o mixto (ocre) y bajista (rojo).</p>
+        <h1>Everything that has been mentioned</h1>
+        <p>Most mentioned first. The bar shows how many days were bullish (green), neutral or mixed (ochre), and bearish (red).</p>
       </header>
-      <input className="filtro-tickers" name="filtro" type="search" aria-label="Filtrar tickers" placeholder="Filtrar, ej. BTC" value={filtro} onChange={(e) => setFiltro(e.target.value)} maxLength={20} />
+      <input className="filtro-tickers" name="filtro" type="search" aria-label="Filter tickers" placeholder="Filter, e.g. BTC" value={filtro} onChange={(e) => setFiltro(e.target.value)} maxLength={20} />
       {cargando ? <Cargando /> : null}
       {error ? <CajaError error={error} reintentar={recargar} /> : null}
-      {datos && lista.length === 0 ? <Vacio titulo="No hay tickers que coincidan." /> : null}
+      {datos && lista.length === 0 ? <Vacio titulo="No matching tickers." /> : null}
       <div className="table-wrap">
         <table className="tabla-tickers">
           <thead>
-            <tr><th>Ticker</th><th>Tipo</th><th>Última postura</th><th>Días</th><th>Historia</th><th>Última mención</th></tr>
+            <tr><th>Ticker</th><th>Type</th><th>Latest stance</th><th>Days</th><th>History</th><th>Last mention</th></tr>
           </thead>
           <tbody>
             {lista.map((t) => {
@@ -35,7 +35,7 @@ export function PaginaTickers() {
                   <td><InsigniaPostura postura={t.ultima_postura} /></td>
                   <td>{t.dias}</td>
                   <td>
-                    <div className="barra-acuerdo" role="img" aria-label={`${plural(t.posturas.alcista, "día alcista", "días alcistas")}, ${plural(t.posturas.bajista, "bajista", "bajistas")}`}>
+                    <div className="barra-acuerdo" role="img" aria-label={`${plural(t.posturas.alcista, "bullish day", "bullish days")}, ${plural(t.posturas.bajista, "bearish", "bearish")}`}>
                       <span className="b-alcista" style={{ width: `${(t.posturas.alcista / total) * 100}%` }} />
                       <span className="b-neutral" style={{ width: `${((t.posturas.neutral + t.posturas.mixta) / total) * 100}%` }} />
                       <span className="b-bajista" style={{ width: `${(t.posturas.bajista / total) * 100}%` }} />

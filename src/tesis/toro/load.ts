@@ -30,7 +30,7 @@ function readDir<T>(dir: string, schema: z.ZodType<T>): T[] {
     .map((f) => readJson(`${dir}/${f}`, schema));
 }
 
-/** Las velas de precio necesitan ambos símbolos; uno sin el otro es un error de configuración, no «sin datos». */
+/** Price candles need both symbols; one without the other is a config error, not "no data". */
 function loadPrice(root: string): PriceData | null {
   const nearPath = `${root}/raw/price/near.json`;
   const btcPath = `${root}/raw/price/btc.json`;
@@ -41,7 +41,7 @@ function loadPrice(root: string): PriceData | null {
   return { near: readJson(nearPath, PriceSeries), btc: readJson(btcPath, PriceSeries) };
 }
 
-/** Carga todos los artefactos de un modo y se niega a mezclar datos simulados y reales. */
+/** Loads every artifact for a mode and refuses to mix simulated and live data. */
 export function loadInputs(mode: DataMode): Inputs {
   const root = dataRoot(mode);
   const manifest = readJson(`${root}/raw/manifest.json`, BisonteManifest);

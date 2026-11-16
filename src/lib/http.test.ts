@@ -22,7 +22,7 @@ describe("requestJson", () => {
 
   it("no filtra secretos de la query en los mensajes de error", async () => {
     const fetchImpl = respond("{}", 500);
-    await expect(requestJson({ url: "https://api.example.org/x?api_key=topsecret&q=1", schema, fetchImpl })).rejects.toThrow(/REDACTADO/);
+    await expect(requestJson({ url: "https://api.example.org/x?api_key=topsecret&q=1", schema, fetchImpl })).rejects.toThrow(/REDACTED/);
     await expect(requestJson({ url: "https://api.example.org/x?api_key=topsecret", schema, fetchImpl })).rejects.not.toThrow(/topsecret/);
   });
 
@@ -38,7 +38,7 @@ describe("requestJson", () => {
 
   it("falla rápido si la respuesta no cumple el esquema", async () => {
     await expect(requestJson({ url: "https://api.example.org/x", schema, fetchImpl: respond(JSON.stringify({ ok: "sí" })) })).rejects.toThrow(
-      /esquema/,
+      /schema mismatch/,
     );
   });
 

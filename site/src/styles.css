@@ -819,7 +819,7 @@ th { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transf
   .world-copy h1 { font-size: 2.1rem; }
   .cta { padding: 12px 22px; }
   .orchestra { height: 20vh; width: 92vw; }
-  /* El texto del héroe crece en pantallas angostas: el espacio inferior mantiene a los agentes debajo de la tarjeta. */
+  /* Hero copy grows on narrow screens: bottom space keeps the agents below the card. */
   .world-hero { padding-bottom: 36vh; }
   .ledger-head { grid-template-columns: 52px 1fr; }
   .verdict-dl { grid-template-columns: 1fr; }

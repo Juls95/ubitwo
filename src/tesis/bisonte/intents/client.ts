@@ -76,7 +76,7 @@ export async function fetchSwaps({ jwt, start, end, fetchImpl, sleep = defaultSl
       if (err instanceof HttpError && err.status === 429 && retries < MAX_RETRIES) {
         retries++;
         const wait = err.retryAfterMs ?? MIN_INTERVAL_MS * 2 ** retries;
-        log.warn("límite de peticiones alcanzado, esperando", { wait, retries });
+        log.warn("rate limit hit, waiting", { wait, retries });
         await sleep(wait);
         page--;
         continue;
@@ -92,7 +92,7 @@ export async function fetchSwaps({ jwt, start, end, fetchImpl, sleep = defaultSl
         amountInUsd: toNumberOrNull(t.amountInUsd),
       });
     }
-    log.info("página", { page, size: batch.length, total: out.length });
+    log.info("page", { page, size: batch.length, total: out.length });
     const last = batch.at(-1);
     if (!last || batch.length < PAGE_SIZE) break;
     cursor = { address: last.depositAddress, memo: last.depositMemo };

@@ -4,7 +4,7 @@ import { verifyPosts } from "../oso/extract";
 import type { OsoDaily, HandleTier } from "../esquemas/oso";
 import type { Rng } from "./prng";
 
-/** Solo cuentas ficticias: las publicaciones simuladas nunca deben atribuirse a personas reales. */
+/** Fictional accounts only: simulated posts must never be attributed to real people. */
 export const MOCK_HANDLES: { handle: string; tier: HandleTier }[] = [
   { handle: "mock_official", tier: "official" },
   { handle: "mock_core_dev", tier: "core" },
@@ -16,18 +16,18 @@ export const MOCK_HANDLES: { handle: string; tier: HandleTier }[] = [
 
 const TOPICS = ["intents", "near-ai", "chain-signatures", "ecosystem", "token", "partnerships"] as const;
 const PARAPHRASES: Record<(typeof TOPICS)[number], string[]> = {
-  intents: ["[MOCK] Destaca el crecimiento de los swaps entre cadenas enrutados por Intents.", "[MOCK] Explica cómo se agregó una nueva cadena al enrutamiento de Intents."],
-  "near-ai": ["[MOCK] Anuncia una función de inferencia privada para agentes.", "[MOCK] Comparte una demostración de un agente que paga por una API."],
-  "chain-signatures": ["[MOCK] Describe una billetera que usa chain signatures para firmar en otra cadena."],
-  ecosystem: ["[MOCK] Resume los proyectos nuevos desplegados esta semana.", "[MOCK] Resume una llamada con la comunidad."],
-  token: ["[MOCK] Opinión sobre el valor de largo plazo del token.", "[MOCK] Predicción especulativa de precio sin fuentes."],
-  partnerships: ["[MOCK] Anuncia una integración con un protocolo externo."],
+  intents: ["[MOCK] Highlights growth in cross-chain swaps routed by Intents.", "[MOCK] Explains how a new chain was added to Intents routing."],
+  "near-ai": ["[MOCK] Announces a private inference feature for agents.", "[MOCK] Shares a demo of an agent that pays for an API."],
+  "chain-signatures": ["[MOCK] Describes a wallet that uses chain signatures to sign on another chain."],
+  ecosystem: ["[MOCK] Summarizes new projects deployed this week.", "[MOCK] Summarizes a community call."],
+  token: ["[MOCK] Opinion on the token's long-term value.", "[MOCK] Speculative price prediction with no sources."],
+  partnerships: ["[MOCK] Announces an integration with an external protocol."],
 };
 
 /**
- * Salida diaria de Oso para la ventana simulada. El pipeline es el real (verifyPosts + scorePosts);
- * solo se simula la «respuesta del LLM», incluidas algunas publicaciones alucinadas o fuera de alcance que deben descartarse.
- * La penúltima semana es eufórica a propósito, para que el detector de divergencias («espejismo») tenga algo que marcar.
+ * Bear daily output for the simulated window. The pipeline is real (verifyPosts + scorePosts);
+ * only the "LLM response" is simulated, including some hallucinated or out-of-scope posts that should be discarded.
+ * The penultimate week is deliberately euphoric so the divergence detector ("mirage") has something to flag.
  */
 export function mockOso(rng: Rng, end: string, weeks: number, liveFrom: string): OsoDaily[] {
   const start = addDays(end, -7 * weeks);
@@ -64,7 +64,7 @@ export function mockOso(rng: Rng, end: string, weeks: number, liveFrom: string):
     if (rng.next() < 0.35) {
       raw.push({
         post_id: "0", url: `https://x.com/mock_eco_a/status/${8_000_000_000 + seq++}`, handle: "mock_eco_a", date,
-        claim_type: "metric", paraphrase: "[MOCK] Publicación alucinada que no aparece en las citas.", primary_source_url: null,
+        claim_type: "metric", paraphrase: "[MOCK] Hallucinated post that does not appear in the citations.", primary_source_url: null,
         contains_numeric_claim: true, sentiment: 0.9, topics: ["intents"],
       });
     }
@@ -72,7 +72,7 @@ export function mockOso(rng: Rng, end: string, weeks: number, liveFrom: string):
       const url = `https://x.com/mock_outsider/status/${7_000_000_000 + seq++}`;
       citations.add(url);
       raw.push({
-        post_id: "0", url, handle: "mock_outsider", date, claim_type: "promo", paraphrase: "[MOCK] Publicación de una cuenta fuera de la lista.",
+        post_id: "0", url, handle: "mock_outsider", date, claim_type: "promo", paraphrase: "[MOCK] Post from an account outside the list.",
         primary_source_url: null, contains_numeric_claim: true, sentiment: 1, topics: ["token"],
       });
     }

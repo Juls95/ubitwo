@@ -1,71 +1,71 @@
 import { PARAMS } from "../../../src/tesis/toro/params";
 import { SCORING } from "../../../src/tesis/oso/score";
 
-const NIVEL: Record<string, string> = { official: "oficial", core: "núcleo", ecosystem: "ecosistema", analyst: "analista" };
+const NIVEL: Record<string, string> = { official: "official", core: "core", ecosystem: "ecosystem", analyst: "analyst" };
 
 export function PaginaMetodologia() {
   return (
     <section className="page">
       <header className="page-head">
-        <span className="eyebrow">Metodología</span>
-        <h1>Cómo se obtiene y se combina cada dato</h1>
-        <p>Qué fuentes se usan, qué parámetros se fijaron antes de ver resultados y qué no se puede medir.</p>
+        <span className="eyebrow">Methodology</span>
+        <h1>How each datapoint is obtained and combined</h1>
+        <p>Which sources are used, which parameters were fixed before seeing results, and what cannot be measured.</p>
       </header>
 
-      <h2>Noticias</h2>
+      <h2>News</h2>
       <ul>
-        <li><strong>Origen:</strong> un bot escribe cada día una página en una base de datos de Notion con un bloque JSON (<code>*.digest.v1</code>): título, sesgo general, contexto y activos con su evidencia.</li>
-        <li><strong>Sincronización:</strong> <code>pnpm noticias:sync</code> lee las páginas editadas en los últimos días, valida el JSON con zod, descarta lo que no cumple y guarda una fila por día en Supabase. Si el contenido no cambió, no reescribe nada.</li>
-        <li><strong>Seguridad del contenido:</strong> lo que dicen las publicaciones es evidencia, nunca instrucciones. Solo se muestran enlaces https y el texto nunca se interpreta como HTML.</li>
-        <li><strong>Postura de un activo:</strong> la escribe el bot; ubitwo la normaliza a alcista, bajista, neutral o mixta y cuenta el acuerdo entre cuentas.</li>
-        <li><strong>Preguntas:</strong> la respuesta solo puede usar los resúmenes guardados. Si no hay modelo de IA configurado, ubitwo responde con los fragmentos más relevantes, sin inventar.</li>
+        <li><strong>Origin:</strong> a bot writes a Notion page each day in a database with a JSON block (<code>*.digest.v1</code>): title, overall bias, context, and assets with their evidence.</li>
+        <li><strong>Sync:</strong> <code>pnpm noticias:sync</code> reads pages edited in recent days, validates the JSON with zod, drops what fails, and stores one row per day in Supabase. If the content did not change, nothing is rewritten.</li>
+        <li><strong>Content safety:</strong> what posts say is evidence, never instructions. Only https links are shown and text is never interpreted as HTML.</li>
+        <li><strong>Asset stance:</strong> written by the bot; ubitwo normalizes it to bullish, bearish, neutral, or mixed and counts agreement across accounts.</li>
+        <li><strong>Questions:</strong> the answer may only use saved digests. If no AI model is configured, ubitwo replies with the most relevant fragments, without inventing.</li>
       </ul>
 
-      <h2>Tesis: fuentes</h2>
+      <h2>Thesis: sources</h2>
       <ul>
-        <li><strong>Bisonte · BigQuery:</strong> tablas públicas de la cadena (<code>blocks</code>, <code>transactions</code>, <code>receipt_actions</code>). Cada consulta filtra por <code>block_date</code> y pasa por una ejecución en seco con límite de bytes.</li>
-        <li><strong>Bisonte · Intents Explorer:</strong> solo intercambios 1Click con estado SUCCESS, una petición cada cinco segundos.</li>
-        <li><strong>Oso · Notion:</strong> TickersInfo, X Creative Output y X Account Analyses. El token vive en <code>NOTION_TOKEN</code>; los ID de las tablas no son secretos.</li>
-        <li><strong>Oso · xAI:</strong> búsqueda en X limitada a una lista fija de cuentas y a un día por consulta.</li>
+        <li><strong>Bison · BigQuery:</strong> public chain tables (<code>blocks</code>, <code>transactions</code>, <code>receipt_actions</code>). Each query filters by <code>block_date</code> and goes through a dry run with a byte limit.</li>
+        <li><strong>Bison · Intents Explorer:</strong> only 1Click swaps with SUCCESS status, one request every five seconds.</li>
+        <li><strong>Bear · Notion:</strong> TickersInfo, X Creative Output, and X Account Analyses. The token lives in <code>NOTION_TOKEN</code>; table IDs are not secrets.</li>
+        <li><strong>Bear · xAI:</strong> X search limited to a fixed account list and one day per query.</li>
       </ul>
 
-      <h2>Cómo leer la tesis</h2>
+      <h2>How to read the thesis</h2>
       <ul>
-        <li><strong>Régimen:</strong> dirección sin momento; compara la mediana de cuentas activas de treinta días contra la de noventa.</li>
-        <li><strong>Confirmadores:</strong> una subida de sentimiento sin actividad es un espejismo.</li>
-        <li><strong>Pico frente a cambio estructural:</strong> un salto que no persiste, o que se concentra en pocos firmantes, no cuenta como adopción.</li>
-        <li><strong>Invalidación explícita:</strong> la tesis dice de antemano qué resultado la cambiaría.</li>
+        <li><strong>Regime:</strong> direction without momentum; compares the thirty-day median of active accounts against the ninety-day median.</li>
+        <li><strong>Confirmers:</strong> a sentiment rise without activity is a mirage.</li>
+        <li><strong>Spike versus structural change:</strong> a jump that does not persist, or that concentrates in few signers, does not count as adoption.</li>
+        <li><strong>Explicit invalidation:</strong> the thesis states in advance which outcome would change it.</li>
       </ul>
 
-      <h2>Parámetros prerregistrados</h2>
+      <h2>Preregistered parameters</h2>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Parámetro</th><th>Valor</th></tr></thead>
+          <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
           <tbody>{Object.entries(PARAMS).map(([k, v]) => <tr key={k}><td><code>{k}</code></td><td>{v}</td></tr>)}</tbody>
         </table>
       </div>
 
-      <h2>Puntaje de credibilidad de Oso</h2>
-      <p className="muted">Se calcula en código, no lo decide el modelo. El resultado queda entre cero y uno.</p>
+      <h2>Bear credibility score</h2>
+      <p className="muted">Computed in code; the model does not decide it. The result stays between zero and one.</p>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Componente</th><th>Valor</th></tr></thead>
+          <thead><tr><th>Component</th><th>Value</th></tr></thead>
           <tbody>
-            {Object.entries(SCORING.tier).map(([k, v]) => <tr key={k}><td>Nivel de la cuenta: {NIVEL[k] ?? k}</td><td>{v}</td></tr>)}
-            <tr><td>Enlaza a una fuente primaria</td><td>+{SCORING.primarySourceBonus}</td></tr>
-            <tr><td>Por cada cuenta independiente que corrobora (máx. {SCORING.corroborationMaxHandles})</td><td>+{SCORING.corroborationBonusPerHandle}</td></tr>
-            <tr><td>Promoción</td><td>−{SCORING.promoPenalty}</td></tr>
-            <tr><td>Cifra sin fuente</td><td>−{SCORING.unsourcedNumberPenalty}</td></tr>
+            {Object.entries(SCORING.tier).map(([k, v]) => <tr key={k}><td>Account tier: {NIVEL[k] ?? k}</td><td>{v}</td></tr>)}
+            <tr><td>Links to a primary source</td><td>+{SCORING.primarySourceBonus}</td></tr>
+            <tr><td>Per independent corroborating account (max {SCORING.corroborationMaxHandles})</td><td>+{SCORING.corroborationBonusPerHandle}</td></tr>
+            <tr><td>Promotion</td><td>−{SCORING.promoPenalty}</td></tr>
+            <tr><td>Unsourced figure</td><td>−{SCORING.unsourcedNumberPenalty}</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2>Límites</h2>
+      <h2>Limits</h2>
       <ul>
-        <li>Las noticias reflejan lo que dicen las cuentas seguidas, no el mercado completo.</li>
-        <li>Sin precio, capitalización, TVL ni comisiones en USD dentro de la tesis: no hay una fuente aprobada para ellos.</li>
-        <li>Las cuentas no son personas; los relayers distorsionan el conteo.</li>
-        <li>Una correlación con desfase no prueba causalidad.</li>
+        <li>News reflects what followed accounts say, not the whole market.</li>
+        <li>No price, market cap, TVL, or USD fees inside the thesis: there is no approved source for them.</li>
+        <li>Accounts are not people; relayers distort the count.</li>
+        <li>A lagged correlation does not prove causation.</li>
       </ul>
     </section>
   );

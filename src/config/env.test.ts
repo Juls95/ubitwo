@@ -32,10 +32,10 @@ describe("loadEnv", () => {
   });
 
   it("falla rápido con valores inválidos", () => {
-    expect(() => loadEnv({ DATA_MODE: "prod" })).toThrow(/inválidas/);
-    expect(() => loadEnv({ SESSION_SECRET: "corto" })).toThrow(/32 caracteres/);
-    expect(() => loadEnv({ EMAILS_PERMITIDOS: "no-es-correo" })).toThrow(/inválidas/);
-    expect(() => loadEnv({ ESPACIO_ID: "Con Espacios" })).toThrow(/inválidas/);
+    expect(() => loadEnv({ DATA_MODE: "prod" })).toThrow(/Invalid environment/);
+    expect(() => loadEnv({ SESSION_SECRET: "corto" })).toThrow(/32 characters/);
+    expect(() => loadEnv({ EMAILS_PERMITIDOS: "no-es-correo" })).toThrow(/Invalid environment/);
+    expect(() => loadEnv({ ESPACIO_ID: "Con Espacios" })).toThrow(/Invalid environment/);
   });
 });
 

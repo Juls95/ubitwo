@@ -1,4 +1,5 @@
 import type { AgentCard } from "../../../src/tesis/toro/agents";
+import { NOMBRE_AGENTE } from "../lib/formato";
 import type { Tesis } from "../lib/tesis";
 import { SpriteAgente } from "./PixelSprites";
 import { Status } from "./Comunes";
@@ -7,41 +8,42 @@ const PASOS = ["α", "β", "γ", "δ", "ε"];
 
 function aporte(agente: AgentCard, tesis: Tesis): string {
   const ultima = agente.runs[0];
-  const corrida = ultima ? `${ultima.summary} (${ultima.at})` : "sin corridas todavía";
+  const corrida = ultima ? `${ultima.summary} (${ultima.at})` : "no runs yet";
   if (agente.id === "oso") {
     const descartadas = Object.values(tesis.oso.discard_reasons).reduce((n, x) => n + x, 0);
     const filas = tesis.oso.notion?.hits.length;
-    const notion = filas !== undefined ? ` Notion: ${filas} filas.` : "";
-    return `${corrida}. Descartó ${descartadas} publicaciones que no pasaron los controles de cita, cuenta o fecha.${notion}`;
+    const notion = filas !== undefined ? ` Notion: ${filas} rows.` : "";
+    return `${corrida}. Discarded ${descartadas} posts that failed citation, account, or date checks.${notion}`;
   }
   if (agente.id === "bisonte") {
     const grafica = tesis.charts.find((c) => c.agent === "bisonte");
     return grafica ? `${corrida}. ${grafica.sentence}` : corrida;
   }
   const semana = tesis.divergences.at(-1);
-  return semana ? `${corrida}. Última semana cruzada: ${semana.week} · ${semana.quadrant}.` : corrida;
+  return semana ? `${corrida}. Latest crossed week: ${semana.week} · ${semana.quadrant}.` : corrida;
 }
 
 export function BotLedger({ agente, tesis }: { agente: AgentCard; tesis: Tesis }) {
   const fallas = agente.validations.filter((v) => v.status === "fail").length;
   const avisos = agente.validations.filter((v) => v.status === "warn").length;
+  const nombre = NOMBRE_AGENTE[agente.id];
   return (
     <article className={`ledger-card agent-${agente.id}`} id={`razonamiento-${agente.id}`}>
       <header className="ledger-head">
         <SpriteAgente id={agente.id} />
         <div>
-          <p className="ledger-kicker">Agente · {agente.id}</p>
-          <h3>{agente.name}</h3>
+          <p className="ledger-kicker">Agent · {agente.id}</p>
+          <h3>{nombre}</h3>
           <p>{agente.role}</p>
         </div>
         <Status status={fallas ? "fail" : avisos ? "warn" : "pass"} />
       </header>
 
       <div className="ledger-block">
-        <h4>Aporte</h4>
+        <h4>Contribution</h4>
         <p>{aporte(agente, tesis)}</p>
         <p className="muted">
-          Salidas:{" "}
+          Outputs:{" "}
           {agente.outputs.map((o, i) => (
             <span key={o}>{i > 0 ? " · " : null}<code>{o}</code></span>
           ))}
@@ -49,7 +51,7 @@ export function BotLedger({ agente, tesis }: { agente: AgentCard; tesis: Tesis }
       </div>
 
       <div className="ledger-block">
-        <h4>Razonamiento</h4>
+        <h4>Reasoning</h4>
         <ol className="ledger-steps">
           {agente.does.map((paso, i) => (
             <li key={paso}>
@@ -61,7 +63,7 @@ export function BotLedger({ agente, tesis }: { agente: AgentCard; tesis: Tesis }
       </div>
 
       <div className="ledger-block">
-        <h4>Validez</h4>
+        <h4>Validity</h4>
         <ul className="validations">
           {agente.validations.map((v) => (
             <li key={v.name}>
@@ -73,7 +75,7 @@ export function BotLedger({ agente, tesis }: { agente: AgentCard; tesis: Tesis }
         </ul>
       </div>
 
-      <a className="ledger-more" href={`#/tesis/agentes/${agente.id}`}>Expediente de {agente.name} →</a>
+      <a className="ledger-more" href={`#/thesis/agents/${agente.id}`}>{nombre}&apos;s dossier →</a>
     </article>
   );
 }

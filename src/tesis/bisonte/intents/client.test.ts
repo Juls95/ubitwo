@@ -48,7 +48,7 @@ describe("fetchSwaps", () => {
 
   it("falla de inmediato cuando cambia la forma de la respuesta", async () => {
     const fetchImpl = jest.fn().mockResolvedValue(json([{ unexpected: true }]));
-    await expect(fetchSwaps({ ...opts, fetchImpl, sleep: jest.fn() })).rejects.toThrow(/no cumple el esquema/);
+    await expect(fetchSwaps({ ...opts, fetchImpl, sleep: jest.fn() })).rejects.toThrow(/schema mismatch/);
   });
 });
 

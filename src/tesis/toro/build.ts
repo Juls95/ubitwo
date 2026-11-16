@@ -15,7 +15,7 @@ const log = createLogger("toro");
 
 export const SITE_BUNDLE = "site/public/data/tesis.json";
 
-/** Un comando: datos crudos → métricas → gráficas → TESIS.md → paquete del sitio. Falla si algún número no está respaldado por datos. */
+/** One command: raw data → metrics → charts → TESIS.md → site bundle. Fails if any number is not backed by data. */
 function main() {
   const env = loadEnv();
   const mode = env.DATA_MODE;
@@ -28,8 +28,8 @@ function main() {
   const template = readFileSync(TEMPLATE_PATH, "utf8");
   const violations = verifyArtifacts(template, ctx, charts);
   if (violations.length) {
-    log.error("la verificación falló; no se escribió nada", { violations });
-    throw new Error(`la verificación falló con ${violations.length} violaciones`);
+    log.error("verification failed; nothing written", { violations });
+    throw new Error(`verification failed with ${violations.length} violations`);
   }
 
   const thesis = render(template, ctx);
@@ -63,8 +63,8 @@ function main() {
     oso: { weeks: inputs.osoWeekly, latest_posts: latestPosts, discard_reasons: discardReasons, notion: inputs.osoNotion },
     agents: buildAgents(inputs, analysis, violations, env.BQ_MAX_BYTES),
   });
-  log.info("tesis generada", { mode, charts: charts.length });
-  process.stdout.write(`tesis:toro OK (${mode}) · ${charts.length} gráficas · ${Object.keys(analysis.metrics).length} métricas\n`);
+  log.info("thesis generated", { mode, charts: charts.length });
+  process.stdout.write(`tesis:toro OK (${mode}) · ${charts.length} charts · ${Object.keys(analysis.metrics).length} metrics\n`);
 }
 
 if (isMain("src/tesis/toro/build.ts")) main();

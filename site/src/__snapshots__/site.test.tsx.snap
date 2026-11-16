@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`componentes la insignia de postura es estable 1`] = `
+exports[`components stance badge is stable 1`] = `
 <span
   class="insignia insignia-alcista"
-  title="Postura alcista"
+  title="Bullish stance"
 >
   <span
     aria-hidden="true"
@@ -11,6 +11,6 @@ exports[`componentes la insignia de postura es estable 1`] = `
     ▲
   </span>
    
-  Alcista
+  Bullish
 </span>
 `;

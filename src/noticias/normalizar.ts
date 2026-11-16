@@ -117,16 +117,16 @@ export function sesgoGeneral(activos: readonly Activo[]): Sesgo {
 /** El objeto JSON del cuerpo de una página de Notion: un bloque ```json o un cuerpo que solo es el objeto. */
 export function extraerJson(cuerpo: string): unknown {
   const text = (cuerpo ?? "").trim();
-  if (!text) throw new ErrorResumen("La página del resumen está vacía.");
+  if (!text) throw new ErrorResumen("The digest page is empty.");
   const match = BLOQUE_JSON.exec(text);
   const candidato = match?.[1] ?? text;
   if (!candidato.trimStart().startsWith("{")) {
-    throw new ErrorResumen(`No se encontró un objeto JSON. El resumen debe incluir un bloque \`\`\`json con el esquema ${ESQUEMA}.`);
+    throw new ErrorResumen(`No JSON object found. The digest must include a \`\`\`json block with schema ${ESQUEMA}.`);
   }
   try {
     return JSON.parse(candidato) as unknown;
   } catch (err) {
-    throw new ErrorResumen(`El JSON del resumen no se puede leer: ${(err as Error).message}`);
+    throw new ErrorResumen(`The digest JSON could not be parsed: ${(err as Error).message}`);
   }
 }
 
@@ -164,15 +164,15 @@ function evidenciaDe(raw: unknown): Evidencia | null {
  * Todo número se acota y todo ticker se valida: el texto lo produjo un modelo y no merece confianza ciega.
  */
 export function normalizar(entrada: unknown, meta: MetaNotion = {}): ResumenDiario {
-  if (!entrada || typeof entrada !== "object" || Array.isArray(entrada)) throw new ErrorResumen("El resumen no es un objeto JSON.");
+  if (!entrada || typeof entrada !== "object" || Array.isArray(entrada)) throw new ErrorResumen("The digest is not a JSON object.");
   const raw = ResumenCrudo.parse(entrada);
   const schema = raw.schema.trim();
   if (schema && !/(^|\.)digest\.v1$/.test(schema)) {
-    throw new ErrorResumen(`El esquema del resumen es "${limpiarTexto(schema, 60)}"; esta versión lee "${ESQUEMA}".`);
+    throw new ErrorResumen(`The digest schema is "${limpiarTexto(schema, 60)}"; this version reads "${ESQUEMA}".`);
   }
 
   const fecha = [raw.date, meta.fecha ?? ""].map((f) => f.trim().slice(0, 10)).find((f) => /^\d{4}-\d{2}-\d{2}$/.test(f));
-  if (!fecha) throw new ErrorResumen("El resumen no tiene una fecha válida (AAAA-MM-DD).");
+  if (!fecha) throw new ErrorResumen("The digest has no valid date (YYYY-MM-DD).");
 
   const grupos = new Map<string, Grupo>();
   for (const item of raw.assets.slice(0, 200)) {
@@ -258,7 +258,7 @@ export function normalizar(entrada: unknown, meta: MetaNotion = {}): ResumenDiar
   const resumen: ResumenDiario = {
     esquema: ESQUEMA,
     fecha,
-    titulo: limpiarTexto(meta.titulo ?? "", 200) || `Resumen del ${fecha}`,
+    titulo: limpiarTexto(meta.titulo ?? "", 200) || `Digest · ${fecha}`,
     sesgo: activos.length === 0 ? "sin datos" : sesgo,
     estado: normalizarEstado(meta.estado),
     cuentas,

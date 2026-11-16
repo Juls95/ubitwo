@@ -28,12 +28,12 @@ function main() {
   const version = (JSON.parse(readFileSync(repoPath("package.json"), "utf8")) as { version: string }).version;
   const repo = crearRepositorio(env);
   const politica = politicaAcceso(env, repo.tipo);
-  if (politica === "bloqueado") log.error("hay datos reales pero el acceso no está configurado: la API no servirá noticias");
-  if (politica === "abierto-local") log.warn("datos reales sin acceso configurado: abierto solo porque NODE_ENV no es production");
+  if (politica === "bloqueado") log.error("real data present but access is not configured: the API will not serve news");
+  if (politica === "abierto-local") log.warn("real data without access configured: open only because NODE_ENV is not production");
   const servidor = crearServidor({ env, repo, distDir: repoPath("dist"), version });
   servidor.listen(env.PORT, () => {
-    log.info("servidor listo", { puerto: env.PORT, fuente: repo.tipo, politica, ia: env.LLM_PROVIDER });
-    process.stdout.write(`ubitwo escuchando en http://localhost:${env.PORT} · noticias: ${repo.tipo} · acceso: ${politica}\n`);
+    log.info("server ready", { puerto: env.PORT, fuente: repo.tipo, politica, ia: env.LLM_PROVIDER });
+    process.stdout.write(`ubitwo listening on http://localhost:${env.PORT} · news: ${repo.tipo} · access: ${politica}\n`);
   });
   const cerrar = () => servidor.close(() => process.exit(0));
   process.on("SIGTERM", cerrar);

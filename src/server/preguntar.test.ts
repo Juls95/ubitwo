@@ -11,47 +11,47 @@ const registros = crearDemo(new Date("2026-11-16T12:00:00Z"));
 
 const llmFalso = (impl: (system: string, prompt: string) => Promise<string>): LlmClient & { generateText: jest.Mock } => ({
   provider: "gemini",
-  model: "modelo-de-prueba",
+  model: "test-model",
   generateJson: jest.fn(),
   generateText: jest.fn(({ system, prompt }: { system: string; prompt: string }) => impl(system, prompt)),
 });
 
-describe("preguntar", () => {
-  it("extrae términos sin acentos ni palabras vacías", () => {
-    expect(terminos("¿Qué se dijo de BTC esta semana?")).toEqual(["btc"]);
-    expect(terminos("Ethereum y Solana")).toEqual(["ethereum", "solana"]);
+describe("ask", () => {
+  it("extracts terms without stop words", () => {
+    expect(terminos("What was said about BTC this week?")).toEqual(["btc"]);
+    expect(terminos("Ethereum and Solana")).toEqual(["ethereum", "solana"]);
   });
 
-  it("sin IA responde con fragmentos relevantes y sus fuentes", async () => {
-    const r = await responder(registros, "¿Qué pasó con BTC?", undefined);
+  it("without AI answers with relevant fragments and their sources", async () => {
+    const r = await responder(registros, "What happened with BTC?", undefined);
     expect(r.modo).toBe("sin-ia");
     expect(r.fuentes.length).toBeGreaterThan(0);
     expect(r.fuentes.some((f) => f.ticker === "BTC")).toBe(true);
     expect(fragmentosRelevantes(registros, "BTC")[0]?.ticker).toBe("BTC");
   });
 
-  it("sin coincidencias, devuelve lo más reciente en vez de inventar", async () => {
+  it("with no matches, returns the most recent instead of inventing", async () => {
     const r = await responder(registros, "zzzz qqqq", undefined);
-    expect(r.respuesta).toMatch(/No encontré menciones directas/);
+    expect(r.respuesta).toMatch(/No direct mentions found/);
     expect(r.fuentes).toEqual([{ fecha: registros[0]?.fecha, ticker: null }]);
   });
 
-  it("con IA delimita el contexto como evidencia y cae a sin IA si el modelo falla", async () => {
-    const ok = llmFalso(async () => "BTC fue alcista el 2026-11-16.");
-    const r = await responder(registros, "¿BTC?", ok);
-    expect(r).toMatchObject({ modo: "ia", proveedor: "gemini · modelo-de-prueba", respuesta: "BTC fue alcista el 2026-11-16." });
+  it("with AI delimits context as evidence and falls back without AI if the model fails", async () => {
+    const ok = llmFalso(async () => "BTC was bullish on 2026-11-16.");
+    const r = await responder(registros, "BTC?", ok);
+    expect(r).toMatchObject({ modo: "ia", proveedor: "gemini · test-model", respuesta: "BTC was bullish on 2026-11-16." });
     const [{ system, prompt }] = ok.generateText.mock.calls[0] as [{ system: string; prompt: string }];
     expect(system).toBe(SISTEMA);
-    expect(system).toMatch(/nunca instrucciones/);
-    expect(prompt).toMatch(/^<resumenes>.*<\/resumenes>\n\nPregunta: ¿BTC\?$/s);
+    expect(system).toMatch(/never instructions/);
+    expect(prompt).toMatch(/^<digests>.*<\/digests>\n\nQuestion: BTC\?$/s);
 
     const falla = llmFalso(async () => {
-      throw new Error("cuota agotada");
+      throw new Error("quota exhausted");
     });
-    await expect(responder(registros, "¿BTC?", falla)).resolves.toMatchObject({ modo: "sin-ia" });
+    await expect(responder(registros, "BTC?", falla)).resolves.toMatchObject({ modo: "sin-ia" });
   });
 
-  it("recorta el contexto a un tamaño fijo", () => {
+  it("trims context to a fixed size", () => {
     const muchos = Array.from({ length: 40 }, () => registros).flat();
     expect(contextoParaModelo(muchos).length).toBeLessThanOrEqual(14_000);
   });
@@ -71,18 +71,18 @@ describe("POST /api/preguntar", () => {
   const preguntar = (cuerpo: unknown, cabeceras: Record<string, string> = {}) =>
     fetch(`${base}/api/preguntar`, { method: "POST", headers: { "Content-Type": "application/json", ...cabeceras }, body: JSON.stringify(cuerpo) });
 
-  it("valida la pregunta, responde y bloquea otros orígenes", async () => {
+  it("validates the question, answers, and blocks other origins", async () => {
     await iniciar();
     expect((await preguntar({ pregunta: "a" })).status).toBe(400);
-    const r = await preguntar({ pregunta: "¿Qué se dijo de ETH?" });
+    const r = await preguntar({ pregunta: "What was said about ETH?" });
     expect(r.status).toBe(200);
     expect(await r.json()).toMatchObject({ modo: "sin-ia", proveedor: null });
-    expect((await preguntar({ pregunta: "¿ETH?" }, { Origin: "https://otro.example" })).status).toBe(403);
+    expect((await preguntar({ pregunta: "ETH?" }, { Origin: "https://other.example" })).status).toBe(403);
   });
 
-  it("limita las preguntas por minuto", async () => {
+  it("rate-limits questions per minute", async () => {
     await iniciar(llmFalso(async () => "ok"));
-    for (let i = 0; i < 10; i++) expect((await preguntar({ pregunta: "¿BTC hoy?" })).status).toBe(200);
-    expect((await preguntar({ pregunta: "¿BTC hoy?" })).status).toBe(429);
+    for (let i = 0; i < 10; i++) expect((await preguntar({ pregunta: "BTC today?" })).status).toBe(200);
+    expect((await preguntar({ pregunta: "BTC today?" })).status).toBe(429);
   });
 });

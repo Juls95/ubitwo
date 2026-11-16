@@ -1,26 +1,33 @@
 import type { Postura, Sesgo, TipoActivo } from "../../../src/noticias/esquema";
 
-const fechaLarga = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
-const fechaCorta = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", timeZone: "UTC" });
+const fechaLarga = new Intl.DateTimeFormat("en-US", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+const fechaCorta = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", timeZone: "UTC" });
 
-/** "lunes, 16 de noviembre" a partir de AAAA-MM-DD (siempre en UTC: la fecha del resumen no depende de la zona del lector). */
+/** "Monday, November 16" from YYYY-MM-DD (always UTC: the digest date does not depend on the reader's timezone). */
 export const formatoFechaLarga = (iso: string) => fechaLarga.format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
 export const formatoFechaCorta = (iso: string) => fechaCorta.format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
 
-export const ETIQUETA_POSTURA: Record<Postura, string> = { alcista: "Alcista", bajista: "Bajista", neutral: "Neutral", mixta: "Mixta" };
-export const ETIQUETA_SESGO: Record<Sesgo, string> = { alcista: "Alcista", bajista: "Bajista", neutral: "Neutral", mixto: "Mixto", "sin datos": "Sin datos" };
-export const ETIQUETA_TIPO: Record<TipoActivo, string> = { accion: "Acción", cripto: "Cripto", indice: "Índice", otro: "Otro" };
+export const ETIQUETA_POSTURA: Record<Postura, string> = { alcista: "Bullish", bajista: "Bearish", neutral: "Neutral", mixta: "Mixed" };
+export const ETIQUETA_SESGO: Record<Sesgo, string> = { alcista: "Bullish", bajista: "Bearish", neutral: "Neutral", mixto: "Mixed", "sin datos": "No data" };
+export const ETIQUETA_TIPO: Record<TipoActivo, string> = { accion: "Stock", cripto: "Crypto", indice: "Index", otro: "Other" };
 export const ICONO_POSTURA: Record<Postura, string> = { alcista: "▲", bajista: "▼", neutral: "■", mixta: "◆" };
 
-/** Titular del inicio a partir del sesgo del día: nunca inventa cifras. */
+/** Stable agent ids stay Spanish; display names are English. */
+export const NOMBRE_AGENTE: Record<"oso" | "bisonte" | "toro", string> = {
+  oso: "Bear",
+  bisonte: "Bison",
+  toro: "Bull",
+};
+
+/** Home headline from the day's bias: never invents figures. */
 export function titularDelDia(sesgo: Sesgo | null): string {
   switch (sesgo) {
-    case "alcista": return "Hoy el ágora amanece alcista.";
-    case "bajista": return "Hoy el ágora amanece bajista.";
-    case "mixto": return "Hoy el ágora está dividida.";
-    case "neutral": return "Hoy el ágora espera.";
-    default: return "Todavía no hay resumen del día.";
+    case "alcista": return "Today the agora opens bullish.";
+    case "bajista": return "Today the agora opens bearish.";
+    case "mixto": return "Today the agora is divided.";
+    case "neutral": return "Today the agora waits.";
+    default: return "No daily digest yet.";
   }
 }
 
-export const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;

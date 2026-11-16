@@ -1,6 +1,6 @@
-# Blueprint de Render: un servicio web y un cron de sincronización.
-# Los secretos llevan `sync: false`: Render los pide al crear el Blueprint y nunca viven en este archivo.
-# Guía: docs/conectar-render-notion-supabase.md
+# Render Blueprint: one web service and one sync cron.
+# Secrets use `sync: false`: Render asks for them when creating the Blueprint and they never live in this file.
+# Guide: docs/conectar-render-notion-supabase.md
 
 services:
   - type: web
@@ -8,7 +8,7 @@ services:
     runtime: node
     plan: starter
     autoDeploy: true
-    # NODE_ENV=production haría que pnpm omita devDependencies (Vite); --prod=false las instala para el build.
+    # NODE_ENV=production would make pnpm omit devDependencies (Vite); --prod=false installs them for the build.
     buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm build
     startCommand: pnpm start
     healthCheckPath: /healthz
@@ -46,7 +46,7 @@ services:
     name: ubitwo-sync
     runtime: node
     plan: starter
-    # Cada hora: trae los resúmenes editados en los últimos 3 días. Sin cambios, no reescribe nada.
+    # Hourly: pulls digests edited in the last 3 days. With no changes, writes nothing.
     schedule: "15 * * * *"
     buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false
     startCommand: pnpm noticias:sync --dias 3

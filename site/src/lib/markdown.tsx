@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Markdown mínimo para TESIS.md: títulos, párrafos, listas, tablas, citas, **negritas** y `código`. Nunca interpreta HTML. */
+/** Minimal markdown for TESIS.md: headings, paragraphs, lists, tables, quotes, **bold**, and `code`. Never interprets HTML. */
 function inline(text: string, key: string): ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean);
   return parts.map((p, i) => {

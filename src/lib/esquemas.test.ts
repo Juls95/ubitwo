@@ -14,7 +14,7 @@ describe("HttpsUrl", () => {
 });
 
 describe("IsoDate", () => {
-  it("solo acepta AAAA-MM-DD", () => {
+  it("solo acepta YYYY-MM-DD", () => {
     expect(IsoDate.safeParse("2026-11-16").success).toBe(true);
     expect(IsoDate.safeParse("16/11/2026").success).toBe(false);
   });

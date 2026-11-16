@@ -8,11 +8,11 @@ export function PaginaTicker({ ticker }: { ticker: string }) {
   const { datos, error, cargando, recargar } = useDatos(() => api.ticker(ticker), [ticker]);
   return (
     <section className="page">
-      <a href="#/tickers" className="volver">← Todos los tickers</a>
+      <a href="#/tickers" className="volver">← All tickers</a>
       <header className="page-head">
-        <span className="eyebrow">Historial</span>
+        <span className="eyebrow">History</span>
         <h1>{ticker.toUpperCase()}</h1>
-        {datos ? <p>{plural(datos.historial.length, "día con menciones", "días con menciones")}. El más reciente arriba.</p> : null}
+        {datos ? <p>{plural(datos.historial.length, "day with mentions", "days with mentions")}. Most recent first.</p> : null}
       </header>
       {cargando ? <Cargando /> : null}
       {error ? <CajaError error={error} reintentar={error.status === 404 ? undefined : recargar} /> : null}
@@ -20,7 +20,7 @@ export function PaginaTicker({ ticker }: { ticker: string }) {
         {datos?.historial.map((d) => (
           <li key={d.fecha}>
             <p className="linea-fecha">
-              <strong>{formatoFechaLarga(d.fecha)}</strong> · día <InsigniaSesgo sesgo={d.sesgo_del_dia} />
+              <strong>{formatoFechaLarga(d.fecha)}</strong> · day <InsigniaSesgo sesgo={d.sesgo_del_dia} />
             </p>
             <TarjetaActivo activo={d.activo} />
           </li>

@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, ErrorApi, type Sesion } from "../lib/api";
 
-/** Token de Supabase en el fragmento de /acceso (flujo implícito del enlace mágico), o null. */
+/** Supabase token in the /acceso or /login fragment (implicit magic-link flow), or null. */
 export function tokenEnLaUrl(): string | null {
-  if (window.location.pathname !== "/acceso") return null;
+  const path = window.location.pathname;
+  if (path !== "/acceso" && path !== "/login") return null;
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   return params.get("access_token");
 }
 
 function irA(hash: string) {
-  // Borra el token de la barra de direcciones y del historial antes de navegar.
+  // Clear the token from the address bar and history before navigating.
   window.history.replaceState(null, "", `/${hash}`);
   window.dispatchEvent(new HashChangeEvent("hashchange"));
 }
@@ -31,12 +32,12 @@ export function PaginaAcceso({ sesion, alCambiarSesion }: Props) {
     api.verificar(token).then(
       () => {
         alCambiarSesion();
-        irA("#/noticias");
+        irA("#/news");
       },
       (e: unknown) => {
         setVerificando(false);
-        setError(e instanceof ErrorApi ? e.message : "No se pudo verificar el enlace.");
-        window.history.replaceState(null, "", "/#/acceso");
+        setError(e instanceof ErrorApi ? e.message : "Could not verify the link.");
+        window.history.replaceState(null, "", "/#/login");
       },
     );
   }, [alCambiarSesion]);
@@ -50,7 +51,7 @@ export function PaginaAcceso({ sesion, alCambiarSesion }: Props) {
       const r = await api.pedirEnlace(email.trim());
       setMensaje(r.mensaje);
     } catch (err) {
-      setError(err instanceof ErrorApi ? err.message : "No se pudo enviar el enlace.");
+      setError(err instanceof ErrorApi ? err.message : "Could not send the link.");
     } finally {
       setEnviando(false);
     }
@@ -59,7 +60,7 @@ export function PaginaAcceso({ sesion, alCambiarSesion }: Props) {
   if (verificando) {
     return (
       <section className="page acceso">
-        <p className="boot" role="status"><span className="live-dot" /> Verificando tu enlace…</p>
+        <p className="boot" role="status"><span className="live-dot" /> Verifying your link…</p>
       </section>
     );
   }
@@ -67,34 +68,34 @@ export function PaginaAcceso({ sesion, alCambiarSesion }: Props) {
   return (
     <section className="page acceso">
       <header className="page-head">
-        <h1>Entrar</h1>
-        <p>Te enviamos un enlace a tu correo. Ábrelo en este mismo navegador y listo: no hay contraseñas.</p>
+        <h1>Sign in</h1>
+        <p>We send a link to your email. Open it in this same browser and you are in: no passwords.</p>
       </header>
 
       {sesion?.usuario ? (
         <div className="aviso" role="status">
-          Ya entraste como <strong>{sesion.usuario}</strong>. <a href="#/noticias">Ir a las noticias →</a>
+          You are signed in as <strong>{sesion.usuario}</strong>. <a href="#/news">Go to the news →</a>
         </div>
       ) : null}
 
       {sesion && !sesion.acceso_configurado ? (
         <div className="aviso" role="status">
-          El acceso con correo todavía no está configurado en este servidor. {sesion.politica === "abierto-local" ? "Mientras tanto, el panel está abierto porque corre en tu computadora." : null}{" "}
-          <a href="#/estado">Ver qué falta</a>
+          Email sign-in is not configured on this server yet. {sesion.politica === "abierto-local" ? "For now the desk is open because it is running on your machine." : null}{" "}
+          <a href="#/status">See what is missing</a>
         </div>
       ) : (
         <form className="formulario" onSubmit={enviar}>
-          <label htmlFor="email">Tu correo</label>
-          <input id="email" name="email" type="email" required autoComplete="email" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" />
+          <label htmlFor="email">Your email</label>
+          <input id="email" name="email" type="email" required autoComplete="email" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           <button type="submit" className="cta" disabled={enviando}>
-            {enviando ? "Enviando…" : "Enviarme el enlace"}
+            {enviando ? "Sending…" : "Send me the link"}
           </button>
         </form>
       )}
 
       {mensaje ? <p className="ok-box" role="status">{mensaje}</p> : null}
       {error ? <p className="error-box" role="alert">{error}</p> : null}
-      <p className="muted">Solo los correos autorizados por quien administra ubitwo pueden entrar. El enlace caduca en una hora.</p>
+      <p className="muted">Only emails authorized by whoever administers ubitwo can sign in. The link expires in one hour.</p>
     </section>
   );
 }

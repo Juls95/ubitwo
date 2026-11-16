@@ -29,27 +29,27 @@ export function enviarJson(res: ServerResponse, status: number, data: unknown, e
 /** Lee un cuerpo JSON con límite de tamaño; rechaza otros tipos de contenido. */
 export async function leerJson(req: IncomingMessage, maxBytes = 16_384): Promise<unknown> {
   const tipo = String(req.headers["content-type"] ?? "");
-  if (!tipo.toLowerCase().startsWith("application/json")) throw new ErrorHttp(415, "Se esperaba Content-Type: application/json");
+  if (!tipo.toLowerCase().startsWith("application/json")) throw new ErrorHttp(415, "Expected Content-Type: application/json");
   const partes: Buffer[] = [];
   let total = 0;
   for await (const chunk of req) {
     const b = chunk as Buffer;
     total += b.length;
-    if (total > maxBytes) throw new ErrorHttp(413, "El cuerpo de la petición es demasiado grande");
+    if (total > maxBytes) throw new ErrorHttp(413, "Request body is too large");
     partes.push(b);
   }
   try {
     return JSON.parse(Buffer.concat(partes).toString("utf8") || "null") as unknown;
   } catch {
-    throw new ErrorHttp(400, "El cuerpo no es JSON válido");
+    throw new ErrorHttp(400, "Request body is not valid JSON");
   }
 }
 
-/** IP del cliente. Detrás del proxy de Render se confía en el primer valor de X-Forwarded-For. */
+/** Client IP. Behind Render's proxy, trust the first X-Forwarded-For value. */
 export function ipCliente(req: IncomingMessage, confiarEnProxy: boolean): string {
   const fwd = req.headers["x-forwarded-for"];
-  if (confiarEnProxy && typeof fwd === "string" && fwd) return fwd.split(",")[0]?.trim() || "desconocida";
-  return req.socket.remoteAddress ?? "desconocida";
+  if (confiarEnProxy && typeof fwd === "string" && fwd) return fwd.split(",")[0]?.trim() || "unknown";
+  return req.socket.remoteAddress ?? "unknown";
 }
 
 /** Ventana fija por minuto y por clave (IP). Suficiente para una sola instancia; en memoria a propósito. */

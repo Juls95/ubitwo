@@ -14,13 +14,13 @@ import { mockPrice } from "./price";
 
 const log = createLogger("mock");
 
-/** Ancla fija para que el escenario simulado (y sus pruebas) nunca se desplacen. */
+/** Fixed anchor so the simulated scenario (and its tests) never drift. */
 export const MOCK_END = "2026-11-14";
 const SEED = 20261109;
 const PRICE_SEED = 20261180;
 const PRICE_DAYS = 420;
 
-/** Todo el escenario simulado en memoria; `main` solo lo persiste. */
+/** Full simulated scenario in memory; `main` only persists it. */
 export function buildMockInputs(root = dataRoot("mock")): Inputs {
   const rng = createRng(SEED);
   const { start, datasets } = mockBisonte(rng, MOCK_END, 180, 90);
@@ -60,7 +60,7 @@ function main() {
     writeJson(`${root}/raw/price/near.json`, inputs.price.near);
     writeJson(`${root}/raw/price/btc.json`, inputs.price.btc);
   }
-  log.info("datos simulados escritos", { root, days: inputs.osoDaily.length });
+  log.info("simulated data written", { root, days: inputs.osoDaily.length });
 }
 
 if (isMain("src/tesis/mock/run.ts")) main();

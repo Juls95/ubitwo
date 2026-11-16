@@ -1,4 +1,5 @@
 import { cargarTesis, type Tesis } from "../lib/tesis";
+import { NOMBRE_AGENTE } from "../lib/formato";
 import { useDatos } from "../lib/useDatos";
 import { Markdown } from "../lib/markdown";
 import { BotLedger } from "../components/BotLedger";
@@ -8,17 +9,17 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
 import { SeccionSocial } from "./SeccionSocial";
 
 const SECCIONES = [
-  { id: "resumen", label: "Tesis" },
-  { id: "graficas", label: "Gráficas" },
+  { id: "summary", label: "Thesis" },
+  { id: "charts", label: "Charts" },
   { id: "social", label: "Social" },
-  { id: "agentes", label: "Agentes" },
+  { id: "agents", label: "Agents" },
 ];
 
 function BannerSimulado({ tesis }: { tesis: Tesis }) {
   if (tesis.mode !== "mock") return null;
   return (
     <div className="aviso" role="status">
-      <strong>Tesis con datos simulados.</strong> Las cifras on-chain, de precio y de sentimiento son simuladas; las notas de las mesas son reales pero parafraseadas. Con credenciales, <code>pnpm tesis:refresh</code> trae datos reales.
+      <strong>Thesis with simulated data.</strong> On-chain, price, and sentiment figures are simulated; desk notes are real but paraphrased. With credentials, <code>pnpm tesis:refresh</code> pulls live data.
     </div>
   );
 }
@@ -27,16 +28,16 @@ function Resumen({ tesis }: { tesis: Tesis }) {
   const fila = (titulo: string, valor: string | null) => (
     <div>
       <span className="eyebrow">{titulo}</span>
-      <strong>{valor ?? "sin datos"}</strong>
+      <strong>{valor ?? "no data"}</strong>
     </div>
   );
   return (
     <article className="thesis">
       <div className="verdict">
-        {fila("Estado de la hipótesis", tesis.hypothesis_verdict)}
-        {fila("Postura", tesis.stance)}
-        {fila("Sesgo técnico", tesis.technical_bias)}
-        {fila("Régimen de adopción", tesis.regime)}
+        {fila("Hypothesis status", tesis.hypothesis_verdict)}
+        {fila("Stance", tesis.stance)}
+        {fila("Technical bias", tesis.technical_bias)}
+        {fila("Adoption regime", tesis.regime)}
       </div>
       <Markdown source={tesis.thesis_md} />
     </article>
@@ -46,7 +47,7 @@ function Resumen({ tesis }: { tesis: Tesis }) {
 function Graficas({ tesis }: { tesis: Tesis }) {
   return (
     <>
-      <p className="lede">Cada gráfica muestra la consulta o el endpoint que la produce y una frase sencilla sobre lo que enseña. Todo se reconstruye con <code>pnpm tesis:toro</code>.</p>
+      <p className="lede">Each chart shows the query or endpoint that produces it and a plain sentence about what it teaches. Everything is rebuilt with <code>pnpm tesis:toro</code>.</p>
       <div className="chart-grid">
         {tesis.charts.map((c) => (
           <ErrorBoundary key={c.id} label={c.title}>
@@ -61,15 +62,15 @@ function Graficas({ tesis }: { tesis: Tesis }) {
 function Agentes({ tesis }: { tesis: Tesis }) {
   return (
     <>
-      <p className="lede">Cada agente se evalúa solo: qué aportó, cómo razonó y si pasó sus validaciones.</p>
+      <p className="lede">Each agent is scored on its own: what it contributed, how it reasoned, and whether it passed its validations.</p>
       <div className="ledger">
         {tesis.agents.map((a) => <BotLedger key={a.id} agente={a} tesis={tesis} />)}
       </div>
-      <h2>Semana a semana</h2>
-      <p className="muted">El cruce semanal del sentimiento de Oso contra la actividad on-chain de Bisonte.</p>
+      <h2>Week by week</h2>
+      <p className="muted">The weekly cross of Bear&apos;s sentiment against Bison&apos;s on-chain activity.</p>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Semana</th><th>Sentimiento</th><th>On-chain</th><th>Veredicto</th><th>Origen</th></tr></thead>
+          <thead><tr><th>Week</th><th>Sentiment</th><th>On-chain</th><th>Verdict</th><th>Origin</th></tr></thead>
           <tbody>
             {tesis.divergences.map((d) => (
               <tr key={d.week}>
@@ -77,7 +78,7 @@ function Agentes({ tesis }: { tesis: Tesis }) {
                 <td>{d.sentiment_index === null ? "—" : d.sentiment_index.toFixed(2)}</td>
                 <td>{d.onchain_change_pct === null ? "—" : `${d.onchain_change_pct > 0 ? "+" : ""}${d.onchain_change_pct.toFixed(1)} %`}</td>
                 <td>{d.quadrant}</td>
-                <td>{d.reconstructed ? "reconstruida" : "en vivo"}</td>
+                <td>{d.reconstructed ? "reconstructed" : "live"}</td>
               </tr>
             ))}
           </tbody>
@@ -89,29 +90,30 @@ function Agentes({ tesis }: { tesis: Tesis }) {
 
 function Agente({ tesis, id }: { tesis: Tesis; id: string }) {
   const agente = tesis.agents.find((a) => a.id === id);
-  if (!agente) return <p>Agente desconocido. <a href="#/tesis/agentes">Ver los tres agentes</a>.</p>;
+  if (!agente) return <p>Unknown agent. <a href="#/thesis/agents">See the three agents</a>.</p>;
   const graficas = tesis.charts.filter((c) => c.agent === agente.id);
+  const nombre = NOMBRE_AGENTE[agente.id];
   return (
     <div className={`agent-page agent-${agente.id}`}>
-      <a href="#/tesis/agentes" className="volver">← Agentes</a>
+      <a href="#/thesis/agents" className="volver">← Agents</a>
       <header className="page-head">
-        <span className="eyebrow">Agente</span>
-        <h1>{agente.name}</h1>
+        <span className="eyebrow">Agent</span>
+        <h1>{nombre}</h1>
         <p>{agente.role}</p>
       </header>
       <div className="two-col">
         <div>
-          <h2>Qué hace</h2>
+          <h2>What it does</h2>
           <ul>{agente.does.map((d) => <li key={d}>{d}</li>)}</ul>
         </div>
         <div>
-          <h2>Entradas</h2>
+          <h2>Inputs</h2>
           <ul>{agente.inputs.map((d) => <li key={d}><code>{d}</code></li>)}</ul>
-          <h2>Salidas</h2>
+          <h2>Outputs</h2>
           <ul>{agente.outputs.map((d) => <li key={d}><code>{d}</code></li>)}</ul>
         </div>
       </div>
-      <h2>Validaciones</h2>
+      <h2>Validations</h2>
       <ul className="validations">
         {agente.validations.map((v) => (
           <li key={v.name}>
@@ -121,10 +123,10 @@ function Agente({ tesis, id }: { tesis: Tesis; id: string }) {
           </li>
         ))}
       </ul>
-      <h2>Qué hizo</h2>
+      <h2>What it did</h2>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Fecha</th><th>Resumen</th><th>Detalle</th></tr></thead>
+          <thead><tr><th>Date</th><th>Summary</th><th>Detail</th></tr></thead>
           <tbody>
             {agente.runs.map((r, i) => (
               <tr key={`${r.at}-${i}`}>
@@ -136,7 +138,7 @@ function Agente({ tesis, id }: { tesis: Tesis; id: string }) {
           </tbody>
         </table>
       </div>
-      {graficas.length > 0 && <h2>Salidas visuales</h2>}
+      {graficas.length > 0 && <h2>Visual outputs</h2>}
       <div className="chart-grid">
         {graficas.map((c) => (
           <ErrorBoundary key={c.id} label={c.title}>
@@ -153,27 +155,27 @@ export function PaginaTesis({ seccion, agente }: { seccion: string; agente?: str
   return (
     <section className="page">
       <header className="page-head">
-        <span className="eyebrow">Tesis</span>
-        <h1>La tesis en el ágora</h1>
-        {tesis ? <p className="muted">Generada el {tesis.generated_at.slice(0, 10)} · modo {tesis.mode === "mock" ? "simulado" : "en vivo"}</p> : null}
+        <span className="eyebrow">Thesis</span>
+        <h1>The thesis in the agora</h1>
+        {tesis ? <p className="muted">Generated {tesis.generated_at.slice(0, 10)} · {tesis.mode === "mock" ? "simulated" : "live"} mode</p> : null}
       </header>
-      <nav className="subnav" aria-label="Secciones de la tesis">
+      <nav className="subnav" aria-label="Thesis sections">
         {SECCIONES.map((s) => (
-          <a key={s.id} href={s.id === "resumen" ? "#/tesis" : `#/tesis/${s.id}`} aria-current={seccion === s.id ? "page" : undefined}>
+          <a key={s.id} href={s.id === "summary" ? "#/thesis" : `#/thesis/${s.id}`} aria-current={seccion === s.id ? "page" : undefined}>
             {s.label}
           </a>
         ))}
       </nav>
-      {cargando ? <Cargando texto="Cargando la evidencia…" /> : null}
+      {cargando ? <Cargando texto="Loading the evidence…" /> : null}
       {error ? <div className="error-box" role="alert">{error.message}</div> : null}
       {tesis ? (
         <>
           <BannerSimulado tesis={tesis} />
-          {seccion === "graficas" ? <Graficas tesis={tesis} /> : null}
+          {seccion === "charts" ? <Graficas tesis={tesis} /> : null}
           {seccion === "social" ? <SeccionSocial tesis={tesis} /> : null}
-          {seccion === "agentes" && !agente ? <Agentes tesis={tesis} /> : null}
-          {seccion === "agentes" && agente ? <Agente tesis={tesis} id={agente} /> : null}
-          {!["graficas", "social", "agentes"].includes(seccion) ? <Resumen tesis={tesis} /> : null}
+          {seccion === "agents" && !agente ? <Agentes tesis={tesis} /> : null}
+          {seccion === "agents" && agente ? <Agente tesis={tesis} id={agente} /> : null}
+          {!["charts", "social", "agents"].includes(seccion) ? <Resumen tesis={tesis} /> : null}
         </>
       ) : null}
     </section>

@@ -73,7 +73,7 @@ describe("queryDatabase", () => {
     const fetchImpl = jest.fn().mockResolvedValue(json({ unexpected: true }));
     await expect(
       queryDatabase({ token: "t", version: "2022-06-28", databaseId: "99687de2-cbd0-4b2e-9e1c-0dd0a3211357", fetchImpl, sleep: jest.fn() }),
-    ).rejects.toThrow(/no cumple el esquema/);
+    ).rejects.toThrow(/schema mismatch/);
   });
 });
 
@@ -132,7 +132,7 @@ describe("mapeo de filas", () => {
     );
     expect(hit?.url).toBeNull();
     expect(JSON.stringify(hit)).not.toMatch(/@example\.org|notion\.so/);
-    expect(hit?.excerpt).toContain("[correo]");
+    expect(hit?.excerpt).toContain("[email]");
   });
 
   it("mapea las filas de mesas e ignora el texto que solo dice «nearly»", () => {
@@ -210,8 +210,8 @@ describe("summarize", () => {
     expect(snap.counts).toEqual({ tickers: 1, creative: 0, analyses: 1, scanned_pages: 5, discarded_false_positives: 2 });
     expect(snap.sentiment_tally.positive).toBe(1);
     expect(snap.themes.map((t) => t.id)).toEqual(expect.arrayContaining(["intents_security", "brave"]));
-    expect(snap.paragraphs.join(" ")).toContain("descartar 2 coincidencias falsas");
-    expect(snap.paragraphs.join(" ")).toContain("positivo: 1");
+    expect(snap.paragraphs.join(" ")).toContain("discarding 2 false matches");
+    expect(snap.paragraphs.join(" ")).toContain("positive: 1");
     expect(snap.themes.find((t) => t.id === "intents_security")?.title).toBe("NEAR Intents / Omni");
     expect(JSON.stringify(snap)).not.toMatch(/secret-notion|Bearer /);
   });

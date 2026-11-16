@@ -3,8 +3,8 @@ import { ESQUEMA, type RegistroResumen } from "./esquema";
 import { normalizar } from "./normalizar";
 
 /**
- * Datos de demostración: cuentas y afirmaciones ficticias, en el mismo formato que escribe el bot en Notion.
- * Pasan por `normalizar` igual que los reales, así la demo prueba el camino completo. Nunca se mezclan con datos reales.
+ * Demo data: fictional accounts and claims, in the same shape the bot writes to Notion.
+ * Runs through `normalizar` like real digests, so the demo exercises the full path. Never mixed with real data.
  */
 const CUENTAS = ["@demo_macro", "@demo_cripto", "@demo_tecnico", "@demo_acciones", "@demo_onchain"];
 
@@ -12,59 +12,59 @@ type Entrada = { ticker: string; account: string; stance: string; claim: string;
 
 const DIAS: { sesgo: string; contexto: string; entradas: Entrada[]; conflictos: string[] }[] = [
   {
-    sesgo: "Alcista",
-    contexto: "Apetito por riesgo tras datos de inflación más bajos de lo esperado; el dólar retrocede y las tecnológicas lideran.",
+    sesgo: "Bullish",
+    contexto: "Risk appetite returns after cooler-than-expected inflation data; the dollar softens and tech leads.",
     entradas: [
-      { ticker: "BTC", account: "@demo_cripto", stance: "bullish", claim: "Recupera su media semanal y los flujos de ETF vuelven a ser positivos.", invalidation: "Cierre semanal por debajo de la media de veinte semanas." },
-      { ticker: "BTC", account: "@demo_macro", stance: "bullish", claim: "Un dólar más débil suele acompañar fases de expansión en cripto." },
-      { ticker: "NVDA", account: "@demo_acciones", stance: "bullish", claim: "La guía de centros de datos supera el consenso por tercer trimestre seguido.", invalidation: "Margen bruto por debajo de lo prometido." },
-      { ticker: "SOL", account: "@demo_onchain", stance: "neutral", claim: "La actividad en la red sube, pero las comisiones siguen planas." },
+      { ticker: "BTC", account: "@demo_cripto", stance: "bullish", claim: "Reclaims its weekly average and ETF flows turn positive again.", invalidation: "Weekly close below the twenty-week average." },
+      { ticker: "BTC", account: "@demo_macro", stance: "bullish", claim: "A weaker dollar often accompanies expansion phases in crypto." },
+      { ticker: "NVDA", account: "@demo_acciones", stance: "bullish", claim: "Data-center guidance beats consensus for a third straight quarter.", invalidation: "Gross margin below guidance." },
+      { ticker: "SOL", account: "@demo_onchain", stance: "neutral", claim: "Network activity rises, but fees stay flat." },
     ],
     conflictos: [],
   },
   {
-    sesgo: "Mixto",
-    contexto: "Mercado indeciso antes de la reunión de la Reserva Federal; rotación de tecnológicas hacia defensivas.",
+    sesgo: "Mixed",
+    contexto: "Indecisive market ahead of the Federal Reserve meeting; rotation from tech into defensives.",
     entradas: [
-      { ticker: "BTC", account: "@demo_tecnico", stance: "bearish", claim: "Rechazo en la resistencia del rango; el RSI diario marca divergencia bajista.", invalidation: "Cierre diario por encima del máximo del rango." },
-      { ticker: "BTC", account: "@demo_cripto", stance: "bullish", claim: "Las ballenas siguen acumulando según datos on-chain." },
-      { ticker: "ETH", account: "@demo_onchain", stance: "bullish", claim: "El suministro en exchanges cae a mínimos de varios años." },
-      { ticker: "TSLA", account: "@demo_acciones", stance: "bearish", claim: "Entregas por debajo de lo esperado y recortes de precio en Europa.", invalidation: "Margen automotriz estable en el próximo reporte." },
-      { ticker: "CRIPTO TOP100", account: "@demo_macro", stance: "mixed", claim: "Las altcoins no acompañan a BTC: la dominancia sube." },
+      { ticker: "BTC", account: "@demo_tecnico", stance: "bearish", claim: "Rejection at range resistance; daily RSI shows a bearish divergence.", invalidation: "Daily close above the range high." },
+      { ticker: "BTC", account: "@demo_cripto", stance: "bullish", claim: "Whales keep accumulating according to on-chain data." },
+      { ticker: "ETH", account: "@demo_onchain", stance: "bullish", claim: "Exchange supply falls to multi-year lows." },
+      { ticker: "TSLA", account: "@demo_acciones", stance: "bearish", claim: "Deliveries miss expectations and Europe sees price cuts.", invalidation: "Automotive margin holds in the next report." },
+      { ticker: "CRIPTO TOP100", account: "@demo_macro", stance: "mixed", claim: "Altcoins fail to follow BTC: dominance rises." },
     ],
-    conflictos: ["@demo_tecnico ve BTC bajista por estructura mientras @demo_cripto lo ve alcista por acumulación."],
+    conflictos: ["@demo_tecnico sees BTC bearish on structure while @demo_cripto sees it bullish on accumulation."],
   },
   {
-    sesgo: "Bajista",
-    contexto: "Salida de riesgo: rendimientos de los bonos al alza y liquidaciones en derivados cripto.",
+    sesgo: "Bearish",
+    contexto: "Risk-off: bond yields climb and crypto derivatives see liquidations.",
     entradas: [
-      { ticker: "BTC", account: "@demo_macro", stance: "bearish", claim: "Rendimientos a diez años en máximos del mes presionan a los activos de riesgo." },
-      { ticker: "ETH", account: "@demo_tecnico", stance: "bearish", claim: "Pierde el soporte del rango y deja un nPOC abierto arriba.", invalidation: "Recuperar el soporte perdido en cierre diario." },
-      { ticker: "NEAR", account: "@demo_onchain", stance: "bullish", claim: "Las cuentas activas diarias siguen creciendo pese a la caída del precio." },
-      { ticker: "NVDA", account: "@demo_acciones", stance: "neutral", claim: "Toma de ganancias sin cambios en el caso fundamental." },
+      { ticker: "BTC", account: "@demo_macro", stance: "bearish", claim: "Ten-year yields at month highs pressure risk assets." },
+      { ticker: "ETH", account: "@demo_tecnico", stance: "bearish", claim: "Loses range support and leaves an open nPOC above.", invalidation: "Reclaim the lost support on a daily close." },
+      { ticker: "NEAR", account: "@demo_onchain", stance: "bullish", claim: "Daily active accounts keep growing despite the price drop." },
+      { ticker: "NVDA", account: "@demo_acciones", stance: "neutral", claim: "Profit-taking with no change to the fundamental case." },
     ],
     conflictos: [],
   },
   {
     sesgo: "Neutral",
-    contexto: "Sesión tranquila, volumen bajo; el mercado espera datos de empleo.",
+    contexto: "Quiet session, low volume; the market waits on jobs data.",
     entradas: [
-      { ticker: "SOL", account: "@demo_cripto", stance: "bullish", claim: "Nuevas aplicaciones de pagos lanzan sobre la red esta semana." },
-      { ticker: "AAPL", account: "@demo_acciones", stance: "neutral", claim: "Sin catalizadores claros hasta el evento de producto." },
-      { ticker: "BTC", account: "@demo_tecnico", stance: "neutral", claim: "Lateral dentro del rango; esperar ruptura con volumen." },
+      { ticker: "SOL", account: "@demo_cripto", stance: "bullish", claim: "New payments apps launch on the network this week." },
+      { ticker: "AAPL", account: "@demo_acciones", stance: "neutral", claim: "No clear catalysts until the product event." },
+      { ticker: "BTC", account: "@demo_tecnico", stance: "neutral", claim: "Sideways inside the range; wait for a volume breakout." },
     ],
     conflictos: [],
   },
   {
-    sesgo: "Alcista",
-    contexto: "Datos de empleo sólidos sin presión salarial; los índices marcan máximos.",
+    sesgo: "Bullish",
+    contexto: "Solid jobs data without wage pressure; indexes print highs.",
     entradas: [
-      { ticker: "NVDA", account: "@demo_acciones", stance: "bullish", claim: "Nuevos pedidos de chips para inteligencia artificial anunciados por hiperescaladores." },
-      { ticker: "ETH", account: "@demo_onchain", stance: "bullish", claim: "Aumentan las entradas a productos cotizados de ETH." },
-      { ticker: "NEAR", account: "@demo_cripto", stance: "bullish", claim: "El volumen de intents entre cadenas crece por cuarta semana." },
-      { ticker: "NEAR", account: "@demo_tecnico", stance: "bearish", claim: "Sigue por debajo de la media lenta; falta confirmación técnica.", invalidation: "Cierre diario por encima de la media lenta." },
+      { ticker: "NVDA", account: "@demo_acciones", stance: "bullish", claim: "Hyperscalers announce new AI chip orders." },
+      { ticker: "ETH", account: "@demo_onchain", stance: "bullish", claim: "Inflows into ETH exchange-traded products rise." },
+      { ticker: "NEAR", account: "@demo_cripto", stance: "bullish", claim: "Cross-chain intents volume grows for a fourth week." },
+      { ticker: "NEAR", account: "@demo_tecnico", stance: "bearish", claim: "Still below the slow average; technical confirmation missing.", invalidation: "Daily close above the slow average." },
     ],
-    conflictos: ["NEAR: fundamentales on-chain alcistas, estructura técnica todavía bajista."],
+    conflictos: ["NEAR: bullish on-chain fundamentals, technical structure still bearish."],
   },
 ];
 
@@ -80,13 +80,13 @@ export function crearDemo(hoy: Date = new Date()): RegistroResumen[] {
         market_context: d.contexto,
         assets: d.entradas.map((e) => ({ ...e, url: `https://x.com/${e.account.slice(1)}` })),
         ticker_intel: [
-          { ticker: "NEAR", what_it_does: "Cadena de capa uno enfocada en abstracción de cuentas e intents entre cadenas.", price: "", last_news: "", source: "https://near.org" },
-          { ticker: "NVDA", what_it_does: "Diseña GPUs y plataformas de cómputo para centros de datos e inteligencia artificial.", price: "", last_news: "", source: "https://nvidia.com" },
+          { ticker: "NEAR", what_it_does: "Layer-one chain focused on account abstraction and cross-chain intents.", price: "", last_news: "", source: "https://near.org" },
+          { ticker: "NVDA", what_it_does: "Designs GPUs and compute platforms for data centers and artificial intelligence.", price: "", last_news: "", source: "https://nvidia.com" },
         ],
         conflicts: d.conflictos,
         flags: ["demo"],
       },
-      { titulo: `Resumen de demostración · ${fecha}`, sesgo: d.sesgo, estado: "Completado" },
+      { titulo: `Demo digest · ${fecha}`, sesgo: d.sesgo, estado: "Completed" },
     );
     return { fecha, notion_page_id: null, resumen, actualizado: `${fecha}T13:00:00.000Z` };
   });

@@ -5,7 +5,7 @@ describe("check-env", () => {
   it("sin variables, todo queda pendiente y nombra lo que falta", () => {
     const r = revisar(loadEnv({}));
     expect(r.every((x) => !x.listo)).toBe(true);
-    expect(r.find((x) => x.nombre.startsWith("Base de datos"))?.faltan).toEqual(["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]);
+    expect(r.find((x) => x.nombre.startsWith("Database"))?.faltan).toEqual(["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]);
   });
 
   it("nunca incluye valores en el informe", () => {
@@ -14,7 +14,7 @@ describe("check-env", () => {
     const r = revisar(env);
     expect(JSON.stringify(r)).not.toContain(secreto);
     expect(JSON.stringify(r)).not.toContain("g-secreto");
-    expect(r.find((x) => x.nombre.startsWith("Base de datos"))?.listo).toBe(true);
-    expect(r.find((x) => x.nombre.startsWith("IA"))?.listo).toBe(true);
+    expect(r.find((x) => x.nombre.startsWith("Database"))?.listo).toBe(true);
+    expect(r.find((x) => x.nombre.startsWith("AI"))?.listo).toBe(true);
   });
 });

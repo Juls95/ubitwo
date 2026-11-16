@@ -23,7 +23,7 @@
     "tesis:toro": "tsx src/tesis/toro/build.ts",
     "tesis:refresh": "pnpm tesis:bisonte && pnpm tesis:oso:notion && pnpm tesis:oso && pnpm tesis:toro",
     "tesis:verificar": "tsx src/tesis/toro/verify.ts",
-    "demo": "pnpm tesis:mock && DATA_MODE=mock pnpm tesis:toro && vite build",
+    "demo": "DATA_MODE=mock pnpm build && pnpm start",
     "check-env": "tsx scripts/check-env.ts",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",

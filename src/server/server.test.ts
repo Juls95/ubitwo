@@ -40,6 +40,7 @@ describe("servidor", () => {
     expect(r.headers.get("x-frame-options")).toBe("DENY");
     const estado = (await (await fetch(`${base}/api/estado`)).json()) as { demo: boolean; fuente: string; ia: { disponible: boolean } };
     expect(estado).toMatchObject({ demo: true, fuente: "demo", ia: { disponible: false } });
+    expect(estado).toMatchObject({ conexiones: { supabase: false, acceso: false, notion: false, ia: false } });
     expect((await fetch(`${base}/readyz`)).status).toBe(200);
   });
 

@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`componentes la insignia de postura es estable 1`] = `
+<span
+  class="insignia insignia-alcista"
+  title="Postura alcista"
+>
+  <span
+    aria-hidden="true"
+  >
+    ▲
+  </span>
+   
+  Alcista
+</span>
+`;

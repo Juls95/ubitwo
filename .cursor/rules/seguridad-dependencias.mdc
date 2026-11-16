@@ -1,0 +1,28 @@
+---
+description: Seguridad de dependencias y cadena de suministro — versiones exactas, 7 días de reposo, solo pnpm
+alwaysApply: true
+---
+
+# Seguridad de dependencias (obligatorio)
+
+Sigue `docs/politica-de-dependencias.md` en cada sugerencia de dependencia o cambio de `package.json`,
+y `SEGURIDAD.md` en todo lo que toque identidad, sesiones, secretos o datos externos.
+
+## Innegociable
+
+1. **Solo versiones exactas** en `package.json`: nada de `^`, `~` ni `latest`.
+2. **Ningún paquete o versión publicado en los últimos 7 días**: avisa y elige la última versión segura.
+3. **Solo pnpm**: nunca recomiendes `npm install`.
+4. **Señala `postinstall` / `preinstall`** y prefiere alternativas.
+5. Tras sugerir una instalación, añade: *Ejecútalo primero en un Dev Container, Docker o carpeta aislada.*
+6. Lockfile: comprométete `pnpm-lock.yaml` junto con el cambio, en un commit propio.
+
+## Herramientas del repo
+
+`.npmrc` fija `save-exact=true` e `ignore-scripts=true`; `pnpm-workspace.yaml` fija `minimumReleaseAge: 10080`.
+No los debilites sin aprobación explícita del usuario.
+
+## Secretos
+
+Nunca leas `.env`, nunca registres tokens, la clave `service_role` de Supabase, `NOTION_TOKEN`,
+`SESSION_SECRET` ni claves de modelos. Comprueba presencia con `pnpm check-env`, nunca valores.

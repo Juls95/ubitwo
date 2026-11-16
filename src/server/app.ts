@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
-import { hasLlm, hasNotionNoticias, type Env } from "../config/env";
+import { hasLlm, hasNotionNoticias, hasSupabase, hasSupabaseAuth, type Env } from "../config/env";
 import { IsoDate } from "../lib/esquemas";
 import { createLogger } from "../lib/logger";
 import { buscar, estadisticas, historialTicker, resumenTickers } from "../noticias/agregados";
@@ -88,6 +88,14 @@ export function rutasNoticias(enrutador: Enrutador, d: Dependencias): Enrutador 
           demo: repo.tipo === "demo",
           notion: hasNotionNoticias(env),
           ia: { disponible: hasLlm(env), proveedor: env.LLM_PROVIDER },
+          // Solo booleanos: dicen qué falta conectar sin revelar ningún valor.
+          conexiones: {
+            supabase: hasSupabase(env),
+            acceso: hasSupabaseAuth(env) && Boolean(env.SESSION_SECRET),
+            notion: hasNotionNoticias(env),
+            ia: hasLlm(env),
+            app_url: Boolean(env.APP_URL),
+          },
         }),
       { publica: true },
     )

@@ -36,7 +36,7 @@ export function PaginaPreguntar({ estado }: { estado: Estado | null }) {
       </header>
       <form className="formulario" onSubmit={alEnviar}>
         <label htmlFor="pregunta">Tu pregunta</label>
-        <textarea id="pregunta" rows={3} required minLength={3} maxLength={500} value={pregunta} onChange={(e) => setPregunta(e.target.value)} placeholder="Ej. ¿Qué se dijo de ETH esta semana?" />
+        <textarea id="pregunta" name="pregunta" rows={3} required minLength={3} maxLength={500} value={pregunta} onChange={(e) => setPregunta(e.target.value)} placeholder="Ej. ¿Qué se dijo de ETH esta semana?" />
         <div className="comment-form-row">
           <span className="muted">{pregunta.length}/500</span>
           <button type="submit" className="cta" disabled={pensando || pregunta.trim().length < 3}>{pensando ? "Pensando…" : "Preguntar"}</button>

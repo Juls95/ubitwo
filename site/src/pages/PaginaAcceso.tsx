@@ -85,7 +85,7 @@ export function PaginaAcceso({ sesion, alCambiarSesion }: Props) {
       ) : (
         <form className="formulario" onSubmit={enviar}>
           <label htmlFor="email">Tu correo</label>
-          <input id="email" type="email" required autoComplete="email" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" />
+          <input id="email" name="email" type="email" required autoComplete="email" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" />
           <button type="submit" className="cta" disabled={enviando}>
             {enviando ? "Enviando…" : "Enviarme el enlace"}
           </button>

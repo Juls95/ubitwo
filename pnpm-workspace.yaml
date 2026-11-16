@@ -1,0 +1,14 @@
+# Cadena de suministro: nunca resolver una versión publicada hace menos de 7 días (en minutos).
+minimumReleaseAge: 10080
+# Ningún paquete ejecuta scripts de instalación salvo los listados aquí (y .npmrc los bloquea igualmente).
+onlyBuiltDependencies: []
+
+# Avisos solo de desarrollo en la cadena de Jest (GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249): se fijan las versiones corregidas.
+overrides:
+  glob@>=9 <14.0.2: ">=14.0.2"
+  minimatch@>=7 <11.0.1: ">=11.0.1"
+
+# Sin versión corregida publicada. Solo desarrollo: deepmerge combina la configuración local de Jest, nunca entrada no confiable.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-gcqx-w48m-w2h4

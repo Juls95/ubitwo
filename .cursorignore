@@ -1,0 +1,8 @@
+# Los asistentes nunca leen archivos de credenciales (docs/politica-de-dependencias.md, regla 16).
+.env
+.env.*
+!.env.example
+*.pem
+gcp-*.json
+service-account*.json
+data/noticias/

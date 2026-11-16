@@ -75,4 +75,23 @@ describe("política de dependencias", () => {
     expect(gitignore).toContain(".env");
     expect(gitignore).toContain(".env.*");
   });
+
+  it("render.yaml: secretos con sync: false e instalación con lockfile congelado", () => {
+    type Var = { key: string; value?: string; sync?: boolean; generateValue?: boolean };
+    const bp = parse(read("render.yaml")) as { services: { name: string; buildCommand: string; envVars: Var[] }[] };
+    const secreto = /(TOKEN|KEY|SECRET|JWT|PASSWORD|EMAILS|_URL)$/;
+    for (const svc of bp.services) {
+      expect(svc.buildCommand).toMatch(/pnpm install --frozen-lockfile/);
+      for (const v of svc.envVars.filter((e) => secreto.test(e.key))) {
+        expect({ servicio: svc.name, key: v.key, value: v.value }).toEqual({ servicio: svc.name, key: v.key, value: undefined });
+        expect(v.sync === false || v.generateValue === true).toBe(true);
+      }
+    }
+  });
+
+  it(".env.example no trae secretos con valor", () => {
+    const lineas = read(".env.example").split("\n").filter((l) => /^[A-Z_]+=/.test(l));
+    const conValor = lineas.filter((l) => /^(\w*(TOKEN|KEY|SECRET|JWT))=.+/.test(l));
+    expect(conValor).toEqual([]);
+  });
 });

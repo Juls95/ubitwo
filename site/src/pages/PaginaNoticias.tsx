@@ -29,7 +29,7 @@ function Buscador() {
     <section className="buscador" aria-label="Buscar en las noticias">
       <form role="search" onSubmit={enviar}>
         <label htmlFor="buscar" className="sr-only">Buscar</label>
-        <input id="buscar" type="search" value={q} minLength={2} maxLength={120} onChange={(e) => setQ(e.target.value)} placeholder="Busca un ticker, una cuenta o un tema (ej. ETF, BTC, @cuenta)" />
+        <input id="buscar" name="q" type="search" value={q} minLength={2} maxLength={120} onChange={(e) => setQ(e.target.value)} placeholder="Busca un ticker, una cuenta o un tema (ej. ETF, BTC, @cuenta)" />
         <button type="submit" className="cta cta-chica">Buscar</button>
       </form>
       {error ? <p className="error-box" role="alert">{error}</p> : null}
@@ -122,14 +122,14 @@ export function PaginaNoticias() {
             <div className="filtros" aria-label="Filtros">
               <label>
                 Postura{" "}
-                <select value={filtro.postura} onChange={(e) => setFiltro({ ...filtro, postura: e.target.value as Filtro["postura"] })}>
+                <select name="postura" value={filtro.postura} onChange={(e) => setFiltro({ ...filtro, postura: e.target.value as Filtro["postura"] })}>
                   <option value="todas">Todas</option>
                   {(Object.keys(ETIQUETA_POSTURA) as Postura[]).map((p) => <option key={p} value={p}>{ETIQUETA_POSTURA[p]}</option>)}
                 </select>
               </label>
               <label>
                 Tipo{" "}
-                <select value={filtro.tipo} onChange={(e) => setFiltro({ ...filtro, tipo: e.target.value as Filtro["tipo"] })}>
+                <select name="tipo" value={filtro.tipo} onChange={(e) => setFiltro({ ...filtro, tipo: e.target.value as Filtro["tipo"] })}>
                   <option value="todos">Todos</option>
                   {(Object.keys(ETIQUETA_TIPO) as TipoActivo[]).map((t) => <option key={t} value={t}>{ETIQUETA_TIPO[t]}</option>)}
                 </select>

@@ -16,7 +16,7 @@ export function PaginaTickers() {
         <h1>Todo lo que se ha mencionado</h1>
         <p>Los más mencionados primero. La barra muestra cuántos días fue alcista (verde), neutral o mixto (ocre) y bajista (rojo).</p>
       </header>
-      <input className="filtro-tickers" type="search" aria-label="Filtrar tickers" placeholder="Filtrar, ej. BTC" value={filtro} onChange={(e) => setFiltro(e.target.value)} maxLength={20} />
+      <input className="filtro-tickers" name="filtro" type="search" aria-label="Filtrar tickers" placeholder="Filtrar, ej. BTC" value={filtro} onChange={(e) => setFiltro(e.target.value)} maxLength={20} />
       {cargando ? <Cargando /> : null}
       {error ? <CajaError error={error} reintentar={recargar} /> : null}
       {datos && lista.length === 0 ? <Vacio titulo="No hay tickers que coincidan." /> : null}

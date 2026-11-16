@@ -749,6 +749,9 @@ a.actor { text-decoration: none; }
 
 .verdict, .stat-row, .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 18px; }
 .verdict > div, .stat { border: 1px solid var(--line); padding: 12px 14px; background: var(--panel); }
+.stat span, .verdict > div > span { display: block; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.stat strong { display: block; font-family: var(--display); font-size: 1.6rem; line-height: 1.2; }
+.verdict > div > strong { display: block; margin-top: 4px; }
 .markdown { border: 1px solid var(--line); padding: 8px 24px 20px; background: var(--panel); }
 .markdown blockquote { border-left: 4px solid var(--fail); padding: 8px 12px; background: rgba(179,58,43,0.08); }
 .table-wrap { overflow-x: auto; }
@@ -816,6 +819,8 @@ th { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transf
   .world-copy h1 { font-size: 2.1rem; }
   .cta { padding: 12px 22px; }
   .orchestra { height: 20vh; width: 92vw; }
+  /* El texto del héroe crece en pantallas angostas: el espacio inferior mantiene a los agentes debajo de la tarjeta. */
+  .world-hero { padding-bottom: 36vh; }
   .ledger-head { grid-template-columns: 52px 1fr; }
   .verdict-dl { grid-template-columns: 1fr; }
   .enter-grid { grid-template-columns: 1fr; }
@@ -826,8 +831,6 @@ th { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transf
   .chart-grid { grid-template-columns: 1fr; }
 }
 
-/* Sign-up */
-.subscribe { padding-top: 8px; padding-bottom: 72px; }
 
 /* ---------- Panel de noticias ---------- */
 :root { --alcista: #2f7a52; --bajista: #b33a2b; --neutral: #8a7a5c; --mixta: #c27a12; }

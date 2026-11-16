@@ -1,0 +1,96 @@
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
+import { loadEnv, requireEnv } from "../../config/env";
+import { createLlmClient } from "../../llm";
+import { citationUrls, outputText, xSearch } from "../../llm/xai";
+import { createLogger } from "../../lib/logger";
+import { addDays, isoDay, weekStart } from "../../lib/dates";
+import { dataRoot, readJson, writeJson } from "../../lib/files";
+import { OsoDaily, HandleConfig, type HandleTier } from "../esquemas/oso";
+import { structureAnswer, verifyPosts } from "./extract";
+import { ingestFromEnv } from "./notion/ingest";
+import { scorePosts } from "./score";
+import { buildWeekly } from "./weekly";
+
+const log = createLogger("oso");
+const HANDLES_FILE = "config/oso.handles.yaml";
+
+export const SEARCH_PROMPT = (date: string) =>
+  `Enumera todas las publicaciones que estas cuentas hicieron el ${date} (UTC) sobre NEAR Protocol, NEAR Intents, NEAR AI o el ecosistema NEAR. ` +
+  `Para cada publicación indica su URL, la cuenta del autor, un resumen neutral de una oración, si enlaza a una fuente primaria ` +
+  `y si menciona una cifra. No incluyas publicaciones de otras fechas ni de otras cuentas.`;
+
+function chunk<T>(xs: readonly T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < xs.length; i += size) out.push(xs.slice(i, i + size));
+  return out;
+}
+
+function parseArgs(argv: readonly string[]) {
+  const idx = argv.indexOf("--backfill-weeks");
+  const backfillWeeks = idx >= 0 ? Number(argv[idx + 1] ?? 0) : 0;
+  const dateIdx = argv.indexOf("--date");
+  return { backfillWeeks, date: dateIdx >= 0 ? argv[dateIdx + 1] : undefined };
+}
+
+async function main() {
+  const env = loadEnv();
+  if (env.DATA_MODE !== "live") throw new Error("oso:run only runs with DATA_MODE=live; use `pnpm tesis:mock` for simulated data");
+  const { XAI_API_KEY } = requireEnv(env, ["XAI_API_KEY"]);
+  if (!existsSync(HANDLES_FILE)) throw new Error(`Falta ${HANDLES_FILE}. Copia config/oso.handles.example.yaml y agrega las cuentas a seguir.`);
+  const config = HandleConfig.parse(parseYaml(readFileSync(HANDLES_FILE, "utf8")));
+  const tiers = new Map<string, HandleTier>(config.handles.map((h) => [h.handle.toLowerCase(), h.tier]));
+  const llm = createLlmClient(env);
+  const root = dataRoot("live");
+
+  if (env.NOTION_TOKEN) {
+    const snap = await ingestFromEnv({ env, token: env.NOTION_TOKEN });
+    writeJson(`${root}/oso/notion/near.json`, snap);
+    log.info("notion snapshot", { hits: snap.hits.length, scanned: snap.counts.scanned_pages });
+  } else {
+    log.warn("missing NOTION_TOKEN; Bear continues without Notion tables");
+  }
+
+  const { backfillWeeks, date } = parseArgs(process.argv);
+  const yesterday = addDays(isoDay(new Date()), -1);
+  const lastDay = date ?? yesterday;
+  const firstDay = backfillWeeks > 0 ? weekStart(addDays(lastDay, -7 * backfillWeeks)) : lastDay;
+  const liveDay = yesterday;
+
+  for (let day = firstDay; day <= lastDay; day = addDays(day, 1)) {
+    const allPosts: unknown[] = [];
+    const citations = new Set<string>();
+    let fetched = 0;
+    for (const batch of chunk(config.handles.map((h) => h.handle), 20)) {
+      const res = await xSearch({
+        apiKey: XAI_API_KEY, model: env.XAI_MODEL, maxTurns: env.XAI_MAX_TURNS,
+        prompt: SEARCH_PROMPT(day), handles: batch, fromDate: day, toDate: addDays(day, 1),
+      });
+      const urls = citationUrls(res);
+      urls.forEach((u) => citations.add(u));
+      fetched += res.usage?.server_side_tool_usage_details?.x_posts_fetched ?? 0;
+      allPosts.push(...(await structureAnswer(llm, outputText(res), [...urls], day)));
+    }
+    const { kept, discarded } = verifyPosts({ posts: allPosts, citations, allowedHandles: new Set(tiers.keys()), date: day });
+    const daily = OsoDaily.parse({
+      mode: "live", date: day, reconstructed: day < liveDay,
+      search_model: env.XAI_MODEL, structuring_model: `${llm.provider}:${llm.model}`,
+      posts_fetched: fetched, posts: scorePosts(kept, tiers), discarded,
+    });
+    writeJson(`${root}/oso/daily/${day}.json`, daily);
+    log.info("day finished", { day, kept: kept.length, discarded: discarded.length, fetched });
+  }
+
+  const dailyDir = `${root}/oso/daily`;
+  const days = readdirSync(dailyDir).filter((f) => f.endsWith(".json")).map((f) => readJson(`${dailyDir}/${f}`, OsoDaily));
+  const weeks = new Set(days.map((d) => weekStart(d.date)));
+  for (const monday of weeks) {
+    const weekly = buildWeekly(days, monday);
+    writeJson(`${root}/oso/weekly/${weekly.week}.json`, weekly);
+  }
+}
+
+main().catch((err: unknown) => {
+  log.error("bear failed", { error: err instanceof Error ? err.message : String(err) });
+  process.exitCode = 1;
+});

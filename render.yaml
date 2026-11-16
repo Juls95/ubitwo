@@ -1,0 +1,69 @@
+# Render Blueprint: one web service and one sync cron.
+# Secrets use `sync: false`: Render asks for them when creating the Blueprint and they never live in this file.
+# Guide: docs/conectar-render-notion-supabase.md
+
+services:
+  - type: web
+    name: ubitwo
+    runtime: node
+    plan: starter
+    autoDeploy: true
+    # NODE_ENV=production would make pnpm omit devDependencies (Vite); --prod=false installs them for the build.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 22.21.1
+      - key: NODE_ENV
+        value: production
+      - key: DATA_MODE
+        value: live
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: EMAILS_PERMITIDOS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NOTION_TOKEN
+        sync: false
+      - key: NOTION_DB_RESUMENES
+        value: b9c8d51185c9473fb93ba810788cf536
+
+  - type: cron
+    name: ubitwo-sync
+    runtime: node
+    plan: starter
+    # Hourly: pulls digests edited in the last 3 days. With no changes, writes nothing.
+    schedule: "15 * * * *"
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false
+    startCommand: pnpm noticias:sync --dias 3
+    envVars:
+      - key: NODE_VERSION
+        value: 22.21.1
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NOTION_TOKEN
+        sync: false
+      - key: NOTION_DB_RESUMENES
+        value: b9c8d51185c9473fb93ba810788cf536
+      - key: NOTION_PROP_USUARIO
+        sync: false
+      - key: NOTION_FILTRO_USUARIO
+        sync: false

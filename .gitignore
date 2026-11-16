@@ -1,0 +1,30 @@
+# Dependencias y builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Secretos
+.env
+.env.*
+!.env.example
+*.pem
+gcp-*.json
+service-account*.json
+
+# Salida del pipeline simulado: los números simulados nunca se comprometen como evidencia
+/data/mock/
+/examples/
+
+# Resúmenes sincronizados en local sin Supabase (pueden contener datos personales)
+/data/noticias/
+
+# Bundle generado del sitio
+/site/public/data/
+
+# SO / editor
+.DS_Store
+*.log
+
+# Datos de la tesis real (se regeneran en cada build)
+/data/tesis/

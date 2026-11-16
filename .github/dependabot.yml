@@ -1,0 +1,24 @@
+# Las PRs automáticas son bienvenidas, pero respetan los siete días de reposo:
+# una versión recién publicada nunca llega al botón de merge dentro de su ventana
+# (docs/politica-de-dependencias.md, reglas 2 y 20).
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci"

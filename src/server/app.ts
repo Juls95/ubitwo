@@ -91,7 +91,7 @@ export function rutasNoticias(enrutador: Enrutador, d: Dependencias): Enrutador 
           // Solo booleanos: dicen qué falta conectar sin revelar ningún valor.
           conexiones: {
             supabase: hasSupabase(env),
-            acceso: hasSupabaseAuth(env) && Boolean(env.SESSION_SECRET),
+            acceso: hasSupabaseAuth(env) && Boolean(env.SESSION_SECRET) && env.EMAILS_PERMITIDOS.length > 0,
             notion: hasNotionNoticias(env),
             ia: hasLlm(env),
             app_url: Boolean(env.APP_URL),

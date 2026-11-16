@@ -3,13 +3,13 @@ import type { Server } from "node:http";
 import { loadEnv, type Env } from "../config/env";
 import { crearDemo } from "../noticias/demo";
 import { repositorioMemoria, type TipoRepositorio } from "../noticias/repositorio";
-import { politicaAcceso, urlRetorno } from "./acceso";
+import { emailPermitido, politicaAcceso, urlRetorno } from "./acceso";
 import { crearServidor } from "./index";
 import { cookieSesion, firmarSesion, verificarSesion } from "./sesion";
 import type { ClienteAuth } from "./supabase-auth";
 
 const SECRETO = "s".repeat(40);
-const CONFIG = { SUPABASE_URL: "https://abc.supabase.co", SUPABASE_ANON_KEY: "anon", SESSION_SECRET: SECRETO };
+const CONFIG = { SUPABASE_URL: "https://abc.supabase.co", SUPABASE_ANON_KEY: "anon", SESSION_SECRET: SECRETO, EMAILS_PERMITIDOS: "ana@example.org" };
 
 let servidor: Server | undefined;
 let base: string;
@@ -62,8 +62,15 @@ describe("política de acceso", () => {
     [CONFIG, "supabase", "sesion"],
     [{}, "local", "abierto-local"],
     [{ NODE_ENV: "production" }, "supabase", "bloqueado"],
+    // Sin lista de correos, el acceso cuenta como no configurado (falla cerrado).
+    [{ ...CONFIG, EMAILS_PERMITIDOS: "", NODE_ENV: "production" }, "supabase", "bloqueado"],
   ] as const)("%j + %s → %s", (vars, fuente, esperada) => {
     expect(politicaAcceso(loadEnv({ ...vars }), fuente)).toBe(esperada);
+  });
+
+  it("una lista vacía no deja entrar a nadie", () => {
+    expect(emailPermitido(loadEnv({ ...CONFIG, EMAILS_PERMITIDOS: "" }), "ana@example.org")).toBe(false);
+    expect(emailPermitido(loadEnv(CONFIG), "ANA@example.org")).toBe(true);
   });
 
   it("en producción el enlace solo vuelve a APP_URL", () => {

@@ -17,8 +17,9 @@ const log = createLogger("acceso");
  */
 export type Politica = "abierto" | "sesion" | "abierto-local" | "bloqueado";
 
+/** Sin lista de correos no hay acceso: Supabase admite registros públicos con la clave anon, así que "cualquier usuario" sería cualquiera. */
 export function accesoConfigurado(env: Env): boolean {
-  return hasSupabaseAuth(env) && Boolean(env.SESSION_SECRET);
+  return hasSupabaseAuth(env) && Boolean(env.SESSION_SECRET) && env.EMAILS_PERMITIDOS.length > 0;
 }
 
 export function politicaAcceso(env: Env, fuente: TipoRepositorio): Politica {
@@ -28,7 +29,7 @@ export function politicaAcceso(env: Env, fuente: TipoRepositorio): Politica {
 }
 
 export function emailPermitido(env: Env, email: string): boolean {
-  return env.EMAILS_PERMITIDOS.length === 0 || env.EMAILS_PERMITIDOS.includes(email.toLowerCase());
+  return env.EMAILS_PERMITIDOS.includes(email.toLowerCase());
 }
 
 /** A dónde vuelve el enlace mágico. En producción solo APP_URL: nunca se construye a partir de la cabecera Host. */
@@ -67,7 +68,7 @@ export function crearGuardia({ env, fuente }: OpcionesAcceso): Guardia {
     if (ctx.req.method === "POST" && !origenValido(ctx, env)) throw new ErrorHttp(403, "Origen no permitido");
     if (politica === "abierto" || politica === "abierto-local") return;
     if (politica === "bloqueado") {
-      throw new ErrorHttp(503, "El acceso no está configurado. Define SUPABASE_URL, SUPABASE_ANON_KEY y SESSION_SECRET.");
+      throw new ErrorHttp(503, "El acceso no está configurado. Define SUPABASE_URL, SUPABASE_ANON_KEY, SESSION_SECRET y EMAILS_PERMITIDOS.");
     }
     if (!usuarioDeSesion(ctx, env)) throw new ErrorHttp(401, "Inicia sesión para ver las noticias.");
   };
@@ -97,7 +98,7 @@ export function rutasAcceso(enrutador: Enrutador, o: OpcionesAcceso): Enrutador 
         // Misma respuesta exista o no el correo, para no revelar quién tiene acceso.
         if (emailPermitido(env, correo)) {
           try {
-            await auth.enviarEnlace(correo, urlRetorno(env), env.EMAILS_PERMITIDOS.includes(correo));
+            await auth.enviarEnlace(correo, urlRetorno(env), true);
           } catch (err) {
             if (err instanceof ErrorHttp) throw err;
             log.warn("Supabase no envió el enlace", { error: (err as Error).message });
@@ -112,7 +113,7 @@ export function rutasAcceso(enrutador: Enrutador, o: OpcionesAcceso): Enrutador 
       "/api/sesion/verificar",
       async (ctx) => {
         if (!origenValido(ctx, env)) throw new ErrorHttp(403, "Origen no permitido");
-        if (!auth || !env.SESSION_SECRET) throw new ErrorHttp(503, "El inicio de sesión no está configurado todavía.");
+        if (!auth || !env.SESSION_SECRET || !accesoConfigurado(env)) throw new ErrorHttp(503, "El inicio de sesión no está configurado todavía.");
         const { access_token } = parsear(CuerpoVerificar, await leerJson(ctx.req));
         let email: string;
         try {

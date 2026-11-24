@@ -1,0 +1,10 @@
+# Copia a config/oso.handles.yaml y reemplaza con las cuentas que Oso debe seguir.
+# tier: official | core | ecosystem | analyst  (los pesos están documentados en src/tesis/oso/score.ts)
+# Máximo 20 cuentas por petición de x_search; las listas más largas se reparten en lotes automáticamente.
+handles:
+  - handle: reemplazar_cuenta_oficial
+    tier: official
+    note: Cuenta oficial del protocolo
+  - handle: reemplazar_analista
+    tier: analyst
+    note: Analista independiente con historial público

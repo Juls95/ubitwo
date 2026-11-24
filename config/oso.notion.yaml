@@ -1,0 +1,8 @@
+# IDs públicos de las bases de Notion que lee Oso para la tesis. El token de integración NUNCA se guarda aquí.
+# Comparte TickersInfo, X Creative Output y X Account Analyses con la integración interna
+# y define NOTION_TOKEN en .env o como secreto en Render.
+version: "2022-06-28"
+databases:
+  tickers_info: "99687de2-cbd0-4b2e-9e1c-0dd0a3211357"
+  x_creative_output: "460be6fc-c001-4330-9832-c55f647c5c23"
+  x_account_analyses: "bbaf87b8-dfa1-4cce-acb3-f4f69a0c383d"
